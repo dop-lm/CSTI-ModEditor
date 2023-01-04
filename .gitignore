@@ -1,0 +1,7 @@
+CSTI-JsonData/
+__pycache__/
+backup/
+build/
+dist/
+Mods/
+*.spec
