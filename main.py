@@ -16,7 +16,7 @@ import NewModGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.0.1"
+ModEditorVersion = "0.0.2"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     groupname_list = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction"]
@@ -84,7 +84,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     pDeleteAct = QAction("删除", pmenu)
                     pDeleteAct.triggered.connect(self.on_delCard)
                     pmenu.addAction(pDeleteAct)
-            pmenu.popup(self.mapToGlobal(pos))
+            pmenu.popup(self.sender().mapToGlobal(pos))
 
     def on_newCard(self) -> None:
         hititem = self.treeWidget.currentItem()
@@ -167,10 +167,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             return
             
         self.new_mod = NewModGUI.NewModGUI(self)
-        self.new_mod.buttonBox.accepted.connect(self.on_newMod_buttonBox_accepted)
+        self.new_mod.buttonBox.accepted.connect(self.on_newModButtonBoxAccepted)
         self.new_mod.exec_()
 
-    def on_newMod_buttonBox_accepted(self):
+    def on_newModButtonBoxAccepted(self):
         mod_name = self.new_mod.lineEdit.text()
 
         if not mod_name:

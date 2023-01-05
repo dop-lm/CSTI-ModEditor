@@ -2,6 +2,7 @@
 
 import sys
 import re
+import traceback
 from data_base import *
 
 from PyQt5.QtCore import *
@@ -35,12 +36,6 @@ class QJsonTreeItem(object):
         except Exception as ex:
             return None
 
-    def delBrother(self, key: str):
-        try:
-            del self.mParent.mChilds[key]
-        except Exception as ex:
-            pass
-
     def newItem(parent, mKey = None, mType = None, mValue = None, mField = None, mVaild = False):
         item = QJsonTreeItem(parent)
         if parent is None:
@@ -53,31 +48,6 @@ class QJsonTreeItem(object):
         item.setField(mField)
         item.setVaild(mVaild)
         return item
-
-    def addWarp(self, key, warp_type, warp_data, isList: bool = False):
-        try:
-            warp_type_item = self.brother(self.key() + "WarpType")
-            warp_data_item = self.brother(self.key() + "WarpData")
-            
-            if warp_type_item is None:
-                self.mParent.appendChild(key + "WarpType", QJsonTreeItem.newItem(self.mParent, key + "WarpType", int, warp_type, "WarpType", True))
-            else:
-                warp_type_item.setValue(warp_type)
-
-            if warp_data_item is None:
-                if isList:
-                    warp_data_item = QJsonTreeItem.newItem(self.mParent, key + "WarpData", list, warp_data, "WarpData", True)
-                    self.mParent.appendChild(key + "WarpData", warp_data_item)
-                    warp_data_item.appendChild(str(warp_data_item.childCount()), QJsonTreeItem.newItem(warp_data_item, str(warp_data_item.childCount()), str, warp_data, "WarpData", True))
-                else:
-                    self.mParent.appendChild(key + "WarpData", QJsonTreeItem.newItem(self.mParent, key + "WarpData", str, warp_data, "WarpData", True))
-            else:
-                if isList:
-                    warp_data_item.appendChild(str(warp_data_item.childCount()), QJsonTreeItem.newItem(warp_data_item, str(warp_data_item.childCount()), str, warp_data, "WarpData", True))
-                else:
-                    warp_data_item.setValue(warp_data)
-        except Exception as ex:
-            None
 
     def parent(self):
         return self.mParent
@@ -139,15 +109,15 @@ class QJsonTreeItem(object):
     def vaild(self):
         return self.mVaild
 
-    def load(value, type_key = "", parent = None, itemKey = None):
+    def load(value, itemField = "", parent = None, itemKey = None):
         rootItem = QJsonTreeItem(parent)
         if itemKey is None:
             rootItem.setKey("root")
         else:
             rootItem.setKey(itemKey)
 
-        if type_key in DataBase.AllTypeField:
-            rootItem.setField(type_key)
+        if itemField in DataBase.AllTypeField:
+            rootItem.setField(itemField)
             
         jsonType = None
         if parent is None:
@@ -192,10 +162,10 @@ class QJsonTreeItem(object):
 
             for key in value:
                 v = value[key]
-                if type_key in DataBase.AllTypeField:
-                    if key in DataBase.AllTypeField[type_key]:
-                        child = QJsonTreeItem.load(v, DataBase.AllTypeField[type_key][key], rootItem, key)
-                        child.setField(DataBase.AllTypeField[type_key][key])
+                if itemField in DataBase.AllTypeField:
+                    if key in DataBase.AllTypeField[itemField]:
+                        child = QJsonTreeItem.load(v, DataBase.AllTypeField[itemField][key], rootItem, key)
+                        child.setField(DataBase.AllTypeField[itemField][key])
                     else:
                         child = QJsonTreeItem.load(v, "", rootItem, key)
                         if key.endswith("WarpData"):
@@ -223,10 +193,10 @@ class QJsonTreeItem(object):
 
             # process the values in the list
             for i, v in enumerate(value):
-                child = QJsonTreeItem.load(v, type_key, rootItem, rootItem.mKey)
+                child = QJsonTreeItem.load(v, itemField, rootItem, rootItem.mKey)
                 child.setKey(str(i))
                 child.setType(v.__class__)
-                child.setField(type_key)
+                child.setField(itemField)
                 if rootItem.mKey.endswith("WarpData"):
                     child.setField("WarpData")
                 rootItem.appendChild(str(i), child)
@@ -333,27 +303,124 @@ class QJsonModel(QAbstractItemModel):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
+
             if item.parent() is not None and item.parent().type() == "list":
                 self.beginRemoveRows(srcIndex.parent(), item.row(), item.row())
                 del item.parent().mChilds[item.key()]
                 self.endRemoveRows()
 
-    def refWarp(self, index: QModelIndex, value, role: int = ...):
-        if not index.isValid():
-            return False
-        if role == Qt.EditRole:
-            item = index.internalPointer()
-            if index.column() == 1:
-                if value:
-                    item.addWarp(item.key(), 3, str(value), item.type() == "list")
-                    item.setVaild(True)
+    def addRefWarp(self, index: QModelIndex, value: str):
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            if value:
+                warpTypeItem = item.brother(item.key() + "WarpType")
+                warpDataItem = item.brother(item.key() + "WarpData")
+                
+                if warpTypeItem is None:
+                    self.addBrother(srcIndex, item.key() + "WarpType", int, 3, "WarpType", True)
                 else:
-                    item.delBrother(item.key() + "WarpType")
-                    item.delBrother(item.key() + "WarpData")
-                    item.setVaild(False)
-        else:
-            return False
-        return True
+                    warpTypeItem.setValue(3)
+
+                if warpDataItem is None:
+                    if item.type() == "list":
+                        self.addBrother(srcIndex, item.key() + "WarpData", list, "", "WarpData", True)
+                        warpDataItem = item.brother(item.key() + "WarpData")
+                        warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex.parent())
+                        child_key = 0
+                        while str(child_key) in warpDataItem.mChilds:
+                            child_key += 1
+                        self.addItem(warpDataIndex, str(child_key), str, value, "WarpData", True)
+                    else:
+                        self.addBrother(srcIndex, item.key() + "WarpData", str, value, "WarpData", True)
+                else:
+                    if item.type() == "list":
+                        warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex.parent())
+                        child_key = 0
+                        while str(child_key) in warpDataItem.mChilds:
+                            child_key += 1
+                        self.addItem(warpDataIndex, str(child_key), str, value, "WarpData", True)
+                    else:
+                        warpDataItem.setValue(value)
+                item.setVaild(True)
+            else:
+                self.deleteBrother(srcIndex, item.key() + "WarpType")
+                self.deleteBrother(srcIndex, item.key() + "WarpData")
+                item.setVaild(False)
+
+    def addBrother(self, index: QModelIndex, key: str, type: type, value: any, field: str, vaild: bool):
+        try:
+            parentItem = index.parent().internalPointer()
+            if parentItem is None:
+                parentItem = self.mRootItem
+            self.beginInsertRows(index.parent(), parentItem.childCount(), parentItem.childCount())
+            brotherItem = QJsonTreeItem.newItem(parentItem, key, type, value, field, vaild)
+            parentItem.appendChild(key, brotherItem)
+            self.endInsertRows()
+        except Exception as ex:
+            print(traceback.format_exc())
+
+    def addJsonItem(self, index: QModelIndex, json: dict, field: str, key: str):
+        try:
+            item = index.internalPointer()
+            if item is None:
+                item = self.mRootItem
+            self.beginInsertRows(index, item.childCount(), item.childCount())
+            childItem = QJsonTreeItem.load(json, field, item, key)
+            childItem.setVaild(True)
+            item.appendChild(key, childItem)
+            self.endInsertRows()
+            childIndex = self.index(childItem.row(), 0, index)
+        except Exception as ex:
+            print(traceback.format_exc())
+
+    def loopInsertJsonRow(self, item: QJsonTreeItem, index: QModelIndex):
+        print(item.key(), item.childCount())
+        # if item.childCount() != 0:
+        #     self.beginInsertRows(index, 0, item.childCount() - 1)
+        #     self.endInsertRows()
+        # for key, childItem in item.mChilds.items():
+        #     childIndex = index.model().index(childItem.row(), 0, index)
+        #     self.loopInsertJsonRow(childItem, childIndex)
+
+    def addItem(self, index: QModelIndex, key: str, type: type, value: any, field: str, vaild: bool):
+        try:
+            item = index.internalPointer()
+            if item is None:
+                item = self.mRootItemf
+            self.beginInsertRows(index, item.childCount(), item.childCount())
+            childItem = QJsonTreeItem.newItem(item, key, type, value, field, vaild)
+            childItem.setVaild(True)
+            item.appendChild(key, childItem)
+            self.endInsertRows()
+        except Exception as ex:
+            print(traceback.format_exc())
+
+    def deleteBrother(self, index: QModelIndex, key: str):
+        try:
+            item = index.internalPointer()
+            brotherItem = item.brother(key)
+            if brotherItem is not None:
+                brotherIndex = self.index(brotherItem.row(), 0, index.parent())
+                self.deleteItem(brotherIndex)
+        except Exception as ex:
+            print(traceback.format_exc())
+
+    def deleteItem(self, index: QModelIndex):
+        try:
+            item = index.internalPointer()
+            parentItem = index.parent().internalPointer()
+            if parentItem is None:
+                parentItem = self.mRootItem
+            self.beginRemoveRows(index.parent(), item.row(), item.row())
+            del parentItem.mChilds[item.key()]
+            self.endRemoveRows()
+        except Exception as ex:
+            print(traceback.format_exc())
 
     def setData(self, index: QModelIndex, value, role: int = ...) -> bool:
         if not index.isValid():
@@ -376,7 +443,9 @@ class QJsonModel(QAbstractItemModel):
             item = index.internalPointer()
             if item.key() == "UniqueID" or item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith("WarpType") or item.key().endswith("WarpData"):
                 return Qt.ItemFlag.NoItemFlags
-            if item.field() == "WarpType" or item.field() == "WarpData":
+            if item.type() == "list":
+                return Qt.ItemFlag.NoItemFlags
+            if item.field() != "Boolean" and item.field() != "Int32" and item.field() != "Single" and item.field() != "String":
                 return Qt.ItemFlag.NoItemFlags
             return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
         if index.column() == 4:

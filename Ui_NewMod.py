@@ -39,5 +39,5 @@ class Ui_NewMod(object):
 
     def retranslateUi(self, NewMod):
         _translate = QtCore.QCoreApplication.translate
-        NewMod.setWindowTitle(_translate("NewMod", "新建Mod"))
+        NewMod.setWindowTitle(_translate("NewMod", "Dialog"))
         self.label.setText(_translate("NewMod", "输入Mod名字"))

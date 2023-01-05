@@ -12,13 +12,14 @@ class DataBase(object):
     AllEnumRev = {}
     AllTypeField = {}
 
-    AllRef = {}            # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[Guid]
-    AllGuid = {}           # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][Ref] -> Guid
-    AllGuidPlain = {}      # DataBase.AllGuidPlain[Ref] -> Guid
-    AllGuidPlainRev = {}   # DataBase.AllGuidPlainRev[Guid] -> Ref
-    AllCardData = {}       # DataBase.AllCardData[Ref] -> CardData Guid
-    AllPath = {}           # DataBase.AllPath["GameStat"] [Ref] -> FilePath
+    AllRef = {}             # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[Guid]
+    AllGuid = {}            # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][Ref] -> Guid
+    AllGuidPlain = {}       # DataBase.AllGuidPlain[Ref] -> Guid
+    AllGuidPlainRev = {}    # DataBase.AllGuidPlainRev[Guid] -> Ref
+    AllCardData = {}        # DataBase.AllCardData[Ref] -> CardData Guid
+    AllPath = {}            # DataBase.AllPath["GameStat"] [Ref] -> FilePath
     AllScriptableObject = {}   # DataBase.AllScriptableObject[Ref] -> Guid or Ref
+    AllCollection = {}      # DataBase.AllCollection["CardsDropCollection"][Name] -> json data
 
 
     def __init__(self):
@@ -90,7 +91,7 @@ class DataBase(object):
         DataBase.AllGuidPlainRev = {v : k for k, v in DataBase.AllGuidPlain.items()}
 
         # print("1010f586b0571af4bac35f48ed42e05f" in  DataBase.AllGuidPlainRev)
-        print("LocalizedString" in  DataBase.AllTypeField)
+        # print("LocalizedString" in  DataBase.AllTypeField)
 
     def loadName():
         DataBase.AllRefBase = {}

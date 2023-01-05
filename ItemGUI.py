@@ -20,14 +20,6 @@ class ItemDelegate(QItemDelegate):
         else:
             srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        # child_index = srcModel.index(2, 0, srcIndex)
-        # if child_index.isValid():
-        #     print("vaild", child_index.internalPointer().key())
-
-        # parent_index = srcModel.parent(srcIndex)
-        # if parent_index.isValid():
-        #     print("parent vaild", parent_index.internalPointer().key())
-
         if item.field() == "Boolean":
             return self.createBoolEditor(parent, option, index)
         elif item.field() == "Int32":
@@ -38,18 +30,6 @@ class ItemDelegate(QItemDelegate):
             pass
         elif item.field() in DataBase.AllEnum and item.type() != "list":
             return self.createSelectEditor(parent, option, index, item.field())
-        # elif item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() in DataBase.AllEnum or item.field() == "ScriptableObject" and item.type() != "list":
-        #     return self.createSelectEditor(parent, option, index, item.field())
-        # elif item.field() != "" and item.field() is not None:
-        #     if item.depth() == 1:
-        #         if item.type() == "list":
-        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.CopyOrNewOrAppend)
-        #         else:
-        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.Copy)
-        #     else:
-        #         if item.type() == "list":
-        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.NewOrLoad)
-        #         return None
         else:
             return super().createEditor(parent, option, index)
         return super().createEditor(parent, option, index)
@@ -87,11 +67,6 @@ class ItemDelegate(QItemDelegate):
             editor.setText(str(index.data()))
         else:
             pass
-            # if item.type() == "bool":
-            #     self.setBoolEditorData(editor, index)
-            # elif item.type() == "float" or item.type() == "str" or item.type() == "int":
-            #     item.setVaild(True)
-            #     editor.setText(str(index.data()))
         return super().setEditorData(editor, index)
 
     def setBoolEditorData(self, editor: QWidget, index: QtCore.QModelIndex) -> None:
@@ -116,73 +91,10 @@ class ItemDelegate(QItemDelegate):
             
         if item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
             pass 
-        elif item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList:
-            if editor.write_flag:
-                if item.field() in DataBase.RefGuidList:
-                    if item.field() == "CardData":
-                        if editor.lineEdit.text() in DataBase.AllCardData:
-                            srcModel.refWarp(srcIndex, DataBase.AllCardData[editor.lineEdit.text()], Qt.EditRole)
-                            return
-                    else:
-                        if editor.lineEdit.text() in DataBase.AllGuid[item.field()]:
-                            srcModel.beginResetModel()
-                            srcModel.refWarp(srcIndex, DataBase.AllGuid[item.field()][editor.lineEdit.text()], Qt.EditRole)
-                            return
-                srcModel.refWarp(srcIndex, editor.lineEdit.text(), Qt.EditRole)
-            return
         elif item.field() in DataBase.AllEnum:
             if editor.write_flag:
                 if editor.lineEdit.text() in DataBase.AllEnum[item.field()]:
                     srcModel.setData(srcIndex, DataBase.AllEnum[item.field()][editor.lineEdit.text()], Qt.EditRole)
-            return
-        elif item.field() == "ScriptableObject":
-            if editor.write_flag:
-                if editor.lineEdit.text() in DataBase.AllScriptableObject:
-                    srcModel.beginResetModel()
-                    srcModel.refWarp(srcIndex, DataBase.AllScriptableObject[editor.lineEdit.text()], Qt.EditRole)
-                    srcModel.endResetModel()
-        elif item.field() != "" and item.field() is not None:
-            if editor.write_flag:
-                if self.data_type in DataBase.AllPath:
-                    template_key = editor.lineEdit.text().split("(")[0]
-                    if template_key in DataBase.AllPath[self.data_type]:
-                        with open(DataBase.AllPath[self.data_type][template_key], 'r') as f:
-                            data = json.load(f)[item.key()]
-                        item = QJsonTreeItem.load(data, type_key = item.field(), parent = item.parent(), itemKey = item.key())
-                        srcModel.beginResetModel()
-                        item.parent().appendChild(item.key(), item)
-                        srcModel.endResetModel()
-                        return
-            elif editor.new_flag:
-                if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.data_type + r"/" + item.field() + r".json"):
-                    with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.data_type + r"/" + item.field() + r".json", 'r') as f:
-                        data = json.load(f)
-                    child_key = 0
-                    while str(child_key) in item.mChilds:
-                        child_key += 1
-                    child = QJsonTreeItem.load(data, type_key = item.field(), parent = item, itemKey = str(child_key))
-                    srcModel.beginResetModel()
-                    item.appendChild(child.key(), child)
-                    srcModel.endResetModel()
-                    return
-            elif editor.append_flag:
-                if self.data_type in DataBase.AllPath:
-                    template_key = editor.lineEdit.text().split("(")[0]
-                    if template_key in DataBase.AllPath[self.data_type]:
-                        with open(DataBase.AllPath[self.data_type][template_key], 'r') as f:
-                            data = json.load(f)[item.key()]
-                        if type(data) is list:
-                            for sub_data in data:
-                                child_key = 0
-                                while str(child_key) in item.mChilds:
-                                    child_key += 1
-                                # srcModel.beginInsertRows(srcIndex, item.childCount(), item.childCount())
-                                srcModel.beginResetModel()
-                                child = QJsonTreeItem.load(sub_data, type_key = item.field(), parent = item, itemKey = str(child_key))
-                                item.appendChild(child.key(), child)
-                                # srcModel.endInsertRows()
-                                srcModel.endResetModel()
-                        return
             return
         return super().setModelData(editor, model, index)
 
@@ -217,32 +129,28 @@ class ItemGUI(QWidget, Ui_Item):
         self.treeView.setDragEnabled(True)
         
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.treeView.customContextMenuRequested.connect(self.on_treeView_customContextMenuRequested)
+        self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)
 
         self.showInvalidButton.setText("显示未激活属性")
-        self.showInvalidButton.clicked.connect(self.on_showInvalidButton_clicked)
+        self.showInvalidButton.clicked.connect(self.on_showInvalidButtonClicked)
 
-        self.lineEdit.textChanged.connect(self.on_lineEdit_textChanged)
+        self.lineEdit.textChanged.connect(self.on_lineEditTextChanged)
         # self.treeView.doubleClicked.connect(self.on_treeViewDoubleClicked)
 
         # self.test_button = QPushButton("Test")
         # self.horizontalLayout.addWidget(self.test_button)
         # self.test_button.clicked.connect(self.on_test)
-        
 
     def loadJsonData(self, json_data):
         self.model = QJsonModel(self.data_type)
         self.model.loadJson(json_data)
         self.proxy_model = QJsonProxyModel(self.treeView)
         self.proxy_model.setSourceModel(self.model)
-        # self.proxy_model.setDynamicSortFilter(True)
-        regx = QRegExp("True")
-        # self.treeView.setModel(model)
         self.treeView.setModel(self.proxy_model)
         for i in range(self.model.columnCount()):
             self.treeView.resizeColumnToContents(i)
 
-    def on_showInvalidButton_clicked(self) -> None:
+    def on_showInvalidButtonClicked(self) -> None:
         if self.showInvalidButton.text() == "显示未激活属性":
             self.showInvalidButton.setText("隐藏未激活属性")
             self.proxy_model.setVaildFilter(False)
@@ -250,10 +158,10 @@ class ItemGUI(QWidget, Ui_Item):
             self.showInvalidButton.setText("显示未激活属性")
             self.proxy_model.setVaildFilter(True)
 
-    def on_lineEdit_textChanged(self, key: str) -> None:
+    def on_lineEditTextChanged(self, key: str) -> None:
         self.proxy_model.setKeyFilter(key)
     
-    def on_treeView_customContextMenuRequested(self, pos: QPoint) -> None:
+    def on_treeViewCustomContextMenuRequested(self, pos: QPoint) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -268,11 +176,42 @@ class ItemGUI(QWidget, Ui_Item):
                     pDeleteAct = QAction("删除", menu)
                     pDeleteAct.triggered.connect(self.on_delListItem)
                     menu.addAction(pDeleteAct)
-                if item.type() == "list" and item.depth() == 1:
-                    pAddAct = QAction("增加", menu)
-                    pAddAct.triggered.connect(self.on_addListItem)
-                    menu.addAction(pAddAct)
-            menu.popup(self.sender().mapToGlobal(pos))
+                
+                if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
+                    if item.type() == "list": 
+                        pRefAct = QAction("追加引用", menu)
+                    else:
+                        pRefAct = QAction("引用", menu)
+                    pRefAct.triggered.connect(self.on_addRefItem)
+                    menu.addAction(pRefAct)
+                elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "":
+                    pass
+                else:
+                    if item.depth() == 1:
+                        pCopyAct = QAction("复制并覆盖", menu)
+                        pCopyAct.triggered.connect(self.on_copyItem)
+                        menu.addAction(pCopyAct)
+
+                        pAddAct = QAction("追加模板项", menu)
+                        pAddAct.triggered.connect(self.on_addListItem)
+                        menu.addAction(pAddAct)
+
+                    if item.type() == "list":
+                        pNewAct = QAction("新建空白项", menu)
+                        pNewAct.triggered.connect(self.on_newListItem)
+                        menu.addAction(pNewAct)
+
+                        pNewAct = QAction("载入收藏", menu)
+                        pNewAct.triggered.connect(self.on_loadListItem)
+                        menu.addAction(pNewAct)
+
+                    if item.parent().type() == "list" and item.depth() > 1:
+                        pSaveAct = QAction("收藏", menu)
+                        pSaveAct.triggered.connect(self.on_saveListItem)
+                        menu.addAction(pSaveAct)
+
+            if len(menu.actions()):
+                menu.popup(self.sender().mapToGlobal(pos))
 
     def on_delListItem(self) -> None:
         index = self.treeView.currentIndex()
@@ -280,7 +219,127 @@ class ItemGUI(QWidget, Ui_Item):
 
     def on_addListItem(self) -> None:
         index = self.treeView.currentIndex()
-        self.model.removeListItem(index)
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            select = SelectGUI(self.treeView, field_name = self.data_type, type = SelectGUI.Append)
+            select.exec_()
+
+            if select.write_flag:
+                if self.data_type in DataBase.AllPath:
+                    template_key = select.lineEdit.text().split("(")[0]
+                    if template_key in DataBase.AllPath[self.data_type]:
+                        with open(DataBase.AllPath[self.data_type][template_key], 'r') as f:
+                            data = json.load(f)[item.key()]
+                        if type(data) is list:
+                            for sub_data in data:
+                                child_key = 0
+                                while str(child_key) in item.mChilds:
+                                    child_key += 1
+                                self.model.addJsonItem(srcIndex, sub_data, item.field(), str(child_key))
+                        return
+            
+
+    def on_newListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.data_type + r"/" + item.field() + r".json"):
+            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.data_type + r"/" + item.field() + r".json", 'r') as f:
+                data = json.load(f)
+            
+            child_key = 0
+            while str(child_key) in item.mChilds:
+                child_key += 1
+            self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
+            return
+
+    def on_loadListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+    def on_saveListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+    def on_copyItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            select = SelectGUI(self.treeView, field_name = self.data_type, type = SelectGUI.Copy)
+            select.exec_()
+
+            if select.write_flag:
+                if self.data_type in DataBase.AllPath:
+                    template_key = select.lineEdit.text().split("(")[0]
+                    if template_key in DataBase.AllPath[self.data_type]:
+                        with open(DataBase.AllPath[self.data_type][template_key], 'r') as f:
+                            data = json.load(f)[item.key()]
+                        
+                        self.model.deleteItem(srcIndex)
+                        self.model.addJsonItem(QModelIndex(), data, item.field(), item.key())
+                        return
+
+    def on_addRefItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            select = SelectGUI(self.treeView, field_name = item.field(), type = SelectGUI.Ref)
+            select.exec_()
+
+            if select.write_flag:
+                if item.field() in DataBase.RefGuidList:
+                    if item.field() == "CardData":
+                        if select.lineEdit.text() in DataBase.AllCardData:
+                            self.model.addRefWarp(index, DataBase.AllCardData[select.lineEdit.text()])
+                            return
+                    elif item.field() == "ScriptableObject":
+                        self.mode.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
+                    else:
+                        if select.lineEdit.text() in DataBase.AllGuid[item.field()]:
+                            self.model.addRefWarp(index, DataBase.AllGuid[item.field()][select.lineEdit.text()])
+                            return
+                self.model.addRefWarp(index, select.lineEdit.text())
+
+        # elif item.field() != "" and item.field() is not None:
+        #     if item.depth() == 1:
+        #         if item.type() == "list":
+        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.CopyOrNewOrAppend)
+        #         else:
+        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.Copy)
+        #     else:
+        #         if item.type() == "list":
+        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.NewOrLoad)
+        #         return NoneA
 
     # def on_test(self):
     #     index = self.treeView.currentIndex()
