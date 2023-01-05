@@ -5,12 +5,14 @@ from PyQt5.QtWidgets import *
 from Ui_Item import *
 from QJsonData import *
 from SelectGUI import *
+from NewItemGUI import *
+from CollectionGUI import *
 from data_base import *
 
 class ItemDelegate(QItemDelegate):
-    def __init__(self, data_type = "", parent = None):
+    def __init__(self, field = "", parent = None):
         super(ItemDelegate, self).__init__(parent)
-        self.data_type = data_type
+        self.field = field
 
     def createEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
         model = index.model()
@@ -118,11 +120,11 @@ class EnableDelegate(QItemDelegate):
             editor.setText("False")
 
 class ItemGUI(QWidget, Ui_Item):
-    def __init__(self, data_type, parent = None):
+    def __init__(self, field, parent = None):
         super(ItemGUI, self).__init__(parent)
         self.setupUi(self)
-        self.data_type = data_type
-        self.treeView.setItemDelegateForColumn(1, ItemDelegate(self.data_type, self.treeView))
+        self.field = field
+        self.treeView.setItemDelegateForColumn(1, ItemDelegate(self.field, self.treeView))
         self.treeView.setItemDelegateForColumn(4, EnableDelegate(self.treeView))
         self.treeView.setSortingEnabled(True)
         self.treeView.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder)
@@ -142,7 +144,7 @@ class ItemGUI(QWidget, Ui_Item):
         # self.test_button.clicked.connect(self.on_test)
 
     def loadJsonData(self, json_data):
-        self.model = QJsonModel(self.data_type)
+        self.model = QJsonModel(self.field)
         self.model.loadJson(json_data)
         self.proxy_model = QJsonProxyModel(self.treeView)
         self.proxy_model.setSourceModel(self.model)
@@ -188,13 +190,24 @@ class ItemGUI(QWidget, Ui_Item):
                     pass
                 else:
                     if item.depth() == 1:
-                        pCopyAct = QAction("复制并覆盖", menu)
+                        pCopyAct = QAction("复制模板并覆盖", menu)
                         pCopyAct.triggered.connect(self.on_copyItem)
                         menu.addAction(pCopyAct)
 
-                        pAddAct = QAction("追加模板项", menu)
-                        pAddAct.triggered.connect(self.on_addListItem)
-                        menu.addAction(pAddAct)
+                        if item.type() == "list":
+                            pAddAct = QAction("追加模板项", menu)
+                            pAddAct.triggered.connect(self.on_addListItem)
+                            menu.addAction(pAddAct)
+
+                    if item.type() == "dict":
+                        pCopyCollAct = QAction("复制收藏并覆盖", menu)
+                        pCopyCollAct.triggered.connect(self.on_copyCollItem)
+                        menu.addAction(pCopyCollAct)
+                    # if item.parent().type() == "list" and item.depth() > 1:
+                    
+                        pSaveAct = QAction("收藏", menu)
+                        pSaveAct.triggered.connect(self.on_saveItem)
+                        menu.addAction(pSaveAct)
 
                     if item.type() == "list":
                         pNewAct = QAction("新建空白项", menu)
@@ -205,10 +218,7 @@ class ItemGUI(QWidget, Ui_Item):
                         pNewAct.triggered.connect(self.on_loadListItem)
                         menu.addAction(pNewAct)
 
-                    if item.parent().type() == "list" and item.depth() > 1:
-                        pSaveAct = QAction("收藏", menu)
-                        pSaveAct.triggered.connect(self.on_saveListItem)
-                        menu.addAction(pSaveAct)
+                    
 
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
@@ -226,14 +236,14 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            select = SelectGUI(self.treeView, field_name = self.data_type, type = SelectGUI.Append)
+            select = SelectGUI(self.treeView, field_name = self.field, type = SelectGUI.Append)
             select.exec_()
 
             if select.write_flag:
-                if self.data_type in DataBase.AllPath:
+                if self.field in DataBase.AllPath:
                     template_key = select.lineEdit.text().split("(")[0]
-                    if template_key in DataBase.AllPath[self.data_type]:
-                        with open(DataBase.AllPath[self.data_type][template_key], 'r') as f:
+                    if template_key in DataBase.AllPath[self.field]:
+                        with open(DataBase.AllPath[self.field][template_key], 'r') as f:
                             data = json.load(f)[item.key()]
                         if type(data) is list:
                             for sub_data in data:
@@ -253,8 +263,8 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.data_type + r"/" + item.field() + r".json"):
-            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.data_type + r"/" + item.field() + r".json", 'r') as f:
+        if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json"):
+            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json", 'r') as f:
                 data = json.load(f)
             
             child_key = 0
@@ -271,8 +281,22 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
+        if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
+            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            return
+        self.loadCollection = CollectionGUI(item.field(), self)
+        self.loadCollection.exec_()
+        
+        name = self.loadCollection.lineEdit.text()
+        
+        if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
+            child_key = 0
+            while str(child_key) in item.mChilds:
+                child_key += 1
+            self.model.addJsonItem(srcIndex, DataBase.AllCollection[item.field()][name], item.field(), str(child_key))
+            return
 
-    def on_saveListItem(self) -> None:
+    def on_saveItem(self) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -280,6 +304,22 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        self.newSave = NewItemGUI(self)
+        self.newSave.buttonBox.accepted.connect(lambda : self.on_newSaveButtonBoxAccepted(item))
+        self.newSave.exec_()
+
+    def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
+        name = self.newSave.lineEdit.text()
+        if not name:
+            return
+        if item.field() not in DataBase.AllCollection:
+            DataBase.AllCollection[item.field()] = {}
+        if name in DataBase.AllCollection[item.field()]:
+            reply = QMessageBox.question(self, '警告', '是否覆盖同名收藏', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
+        DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
 
     def on_copyItem(self) -> None:
         index = self.treeView.currentIndex()
@@ -290,19 +330,40 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            select = SelectGUI(self.treeView, field_name = self.data_type, type = SelectGUI.Copy)
+            select = SelectGUI(self.treeView, field_name = self.field, type = SelectGUI.Copy)
             select.exec_()
 
             if select.write_flag:
-                if self.data_type in DataBase.AllPath:
+                if self.field in DataBase.AllPath:
                     template_key = select.lineEdit.text().split("(")[0]
-                    if template_key in DataBase.AllPath[self.data_type]:
-                        with open(DataBase.AllPath[self.data_type][template_key], 'r') as f:
+                    if template_key in DataBase.AllPath[self.field]:
+                        with open(DataBase.AllPath[self.field][template_key], 'r') as f:
                             data = json.load(f)[item.key()]
                         
                         self.model.deleteItem(srcIndex)
-                        self.model.addJsonItem(QModelIndex(), data, item.field(), item.key())
+                        self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                         return
+
+    def on_copyCollItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
+                QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+                return
+            self.loadCollection = CollectionGUI(item.field(), self)
+            self.loadCollection.exec_()
+            
+            name = self.loadCollection.lineEdit.text()
+            if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
+                self.model.deleteItem(srcIndex)
+                self.model.addJsonItem(srcIndex.parent(), DataBase.AllCollection[item.field()][name], item.field(), item.key())
+                return
 
     def on_addRefItem(self) -> None:
         index = self.treeView.currentIndex()
@@ -333,12 +394,12 @@ class ItemGUI(QWidget, Ui_Item):
         # elif item.field() != "" and item.field() is not None:
         #     if item.depth() == 1:
         #         if item.type() == "list":
-        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.CopyOrNewOrAppend)
+        #             return self.createSelectEditor(parent, option, index, self.field, SelectGUI.CopyOrNewOrAppend)
         #         else:
-        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.Copy)
+        #             return self.createSelectEditor(parent, option, index, self.field, SelectGUI.Copy)
         #     else:
         #         if item.type() == "list":
-        #             return self.createSelectEditor(parent, option, index, self.data_type, SelectGUI.NewOrLoad)
+        #             return self.createSelectEditor(parent, option, index, self.field, SelectGUI.NewOrLoad)
         #         return NoneA
 
     # def on_test(self):

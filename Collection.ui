@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>NewMod</class>
- <widget class="QDialog" name="NewMod">
+ <class>Collection</class>
+ <widget class="QDialog" name="Collection">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>266</width>
-    <height>87</height>
+    <width>400</width>
+    <height>290</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,16 +15,19 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>输入Mod名字</string>
+        <string>搜索框</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLineEdit" name="lineEdit"/>
+     </item>
+     <item>
+      <widget class="QListWidget" name="listWidget"/>
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
@@ -45,7 +48,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>NewMod</receiver>
+   <receiver>Collection</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -61,7 +64,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>NewMod</receiver>
+   <receiver>Collection</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

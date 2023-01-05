@@ -12,7 +12,7 @@ import json
 import uuid
 from data_base import *
 import ItemGUI
-import NewModGUI
+import NewItemGUI
 import SelectGUI
 from functools import partial
 
@@ -60,7 +60,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.tabWidget.tabCloseRequested.connect(self.on_tabWidgetTabCloseRequested)
 
     def closeEvent(self, event) -> None:
-        reply = QMessageBox.question(self, '保存', '是否在退出前保存', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+        reply = QMessageBox.question(self, '保存', '是否在退出前保存(收藏、子菜单、本地化)', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.on_saveMod()
             event.accept()  
@@ -166,7 +166,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, '警告','请先关闭所有子菜单')
             return
             
-        self.new_mod = NewModGUI.NewModGUI(self)
+        self.new_mod = NewItemGUI.NewModGUI(self)
         self.new_mod.buttonBox.accepted.connect(self.on_newModButtonBoxAccepted)
         self.new_mod.exec_()
 
@@ -192,6 +192,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     json.dump(save_data, f, indent = 4)
             with open(self.mod_path + "/ModInfo.json", "w") as f:
                 json.dump(self.mod_info, f, indent = 4)
+
+            DataBase.saveCollection()
         
     def on_loadMod(self):
         if self.tab_item_dict:

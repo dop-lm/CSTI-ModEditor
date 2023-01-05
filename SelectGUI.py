@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from Ui_Select import *
+from Ui_Collection import *
 from data_base import *
 
 class SelectGUI(QDialog, Ui_Select):

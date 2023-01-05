@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'd:\CSTI-ModEditor\NewMod.ui'
+# Form implementation generated from reading ui file 'd:\CSTI-ModEditor\NewItem.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -11,33 +11,33 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_NewMod(object):
-    def setupUi(self, NewMod):
-        NewMod.setObjectName("NewMod")
-        NewMod.resize(266, 87)
-        self.gridLayout = QtWidgets.QGridLayout(NewMod)
+class Ui_NewItem(object):
+    def setupUi(self, NewItem):
+        NewItem.setObjectName("NewItem")
+        NewItem.resize(266, 87)
+        self.gridLayout = QtWidgets.QGridLayout(NewItem)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        self.label = QtWidgets.QLabel(NewMod)
+        self.label = QtWidgets.QLabel(NewItem)
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
-        self.lineEdit = QtWidgets.QLineEdit(NewMod)
+        self.lineEdit = QtWidgets.QLineEdit(NewItem)
         self.lineEdit.setObjectName("lineEdit")
         self.verticalLayout.addWidget(self.lineEdit)
-        self.buttonBox = QtWidgets.QDialogButtonBox(NewMod)
+        self.buttonBox = QtWidgets.QDialogButtonBox(NewItem)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
-        self.retranslateUi(NewMod)
-        self.buttonBox.accepted.connect(NewMod.accept) # type: ignore
-        self.buttonBox.rejected.connect(NewMod.reject) # type: ignore
-        QtCore.QMetaObject.connectSlotsByName(NewMod)
+        self.retranslateUi(NewItem)
+        self.buttonBox.accepted.connect(NewItem.accept) # type: ignore
+        self.buttonBox.rejected.connect(NewItem.reject) # type: ignore
+        QtCore.QMetaObject.connectSlotsByName(NewItem)
 
-    def retranslateUi(self, NewMod):
+    def retranslateUi(self, NewItem):
         _translate = QtCore.QCoreApplication.translate
-        NewMod.setWindowTitle(_translate("NewMod", "Dialog"))
-        self.label.setText(_translate("NewMod", "输入Mod名字"))
+        NewItem.setWindowTitle(_translate("NewItem", "Dialog"))
+        self.label.setText(_translate("NewItem", "输入名字"))

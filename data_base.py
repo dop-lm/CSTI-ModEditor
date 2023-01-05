@@ -43,6 +43,9 @@ class DataBase(object):
         # Load Template
         # DataBase.loadTemplate()
 
+        # Load Collection
+        DataBase.loadCollection()
+
     def LoadModData(mod_name, mod_dir):
         DataBase.AllRef = {}            # DataBase.AllRef["ActionTag"] -> list[Ref]             DataBase.AllRef["CardData"]["Item"] -> list[Guid]
         DataBase.AllGuid = {}           # DataBase.AllGuid["GameStat"][Ref] -> Guid        DataBase.AllGuid["CardData"]["Item"][Ref] -> Guid
@@ -58,7 +61,6 @@ class DataBase(object):
         DataBase.AllCardData.update(DataBase.AllCardDataBase)
         DataBase.AllPath.update(DataBase.AllPathBase)
         DataBase.AllScriptableObject.update(DataBase.AllScriptableObjectBase)
-
 
         DataBase.AllRef["CardData"]["Mod"] = []
 
@@ -171,6 +173,15 @@ class DataBase(object):
         
         for key, item in DataBase.AllEnum.items():
             DataBase.AllEnumRev[key] = {v : k for k, v in DataBase.AllEnum[key].items()}
+
+    def loadCollection():
+        if os.path.exists(DataBase.DataDir + r"/Mods/" + r"Collection.json"):
+            with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "r", encoding='utf-8') as f:
+                DataBase.AllCollection = json.load(f)
+
+    def saveCollection():
+        with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
+            json.dump(DataBase.AllCollection, f)
 
 
     # def loadTemplate():

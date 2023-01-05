@@ -277,7 +277,7 @@ class QJsonModel(QAbstractItemModel):
     def __init__(self, root_type, parent = None):
         super().__init__(parent)
         self.mRootItem = QJsonTreeItem()
-        self.mHeaders = ["key", "value", "field_type", "data_type", "vaild"]
+        self.mHeaders = ["key", "value", "field", "type", "vaild"]
         self.root_type = root_type
 
     def loadJson(self, json):
