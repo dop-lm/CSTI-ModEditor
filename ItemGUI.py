@@ -64,9 +64,11 @@ class ItemDelegate(QItemDelegate):
 
         if item.field() == "Boolean":
             self.setBoolEditorData(editor, index)
+            return
         elif item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
             item.setVaild(True)
             editor.setText(str(index.data()))
+            return
         else:
             pass
         return super().setEditorData(editor, index)
@@ -128,6 +130,7 @@ class ItemGUI(QWidget, Ui_Item):
         self.treeView.setItemDelegateForColumn(4, EnableDelegate(self.treeView))
         self.treeView.setSortingEnabled(True)
         self.treeView.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder)
+        self.treeView.header().setSortIndicator(4, Qt.SortOrder.DescendingOrder)
         self.treeView.setDragEnabled(True)
         
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -390,17 +393,6 @@ class ItemGUI(QWidget, Ui_Item):
                             self.model.addRefWarp(index, DataBase.AllGuid[item.field()][select.lineEdit.text()])
                             return
                 self.model.addRefWarp(index, select.lineEdit.text())
-
-        # elif item.field() != "" and item.field() is not None:
-        #     if item.depth() == 1:
-        #         if item.type() == "list":
-        #             return self.createSelectEditor(parent, option, index, self.field, SelectGUI.CopyOrNewOrAppend)
-        #         else:
-        #             return self.createSelectEditor(parent, option, index, self.field, SelectGUI.Copy)
-        #     else:
-        #         if item.type() == "list":
-        #             return self.createSelectEditor(parent, option, index, self.field, SelectGUI.NewOrLoad)
-        #         return NoneA
 
     # def on_test(self):
     #     index = self.treeView.currentIndex()

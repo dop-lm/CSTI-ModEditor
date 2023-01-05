@@ -448,7 +448,11 @@ class QJsonModel(QAbstractItemModel):
             if item.field() != "Boolean" and item.field() != "Int32" and item.field() != "Single" and item.field() != "String":
                 return Qt.ItemFlag.NoItemFlags
             return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
-        if index.column() == 4:
+        elif index.column() == 2:
+            return Qt.ItemFlag.NoItemFlags
+        elif index.column() == 3:
+            return Qt.ItemFlag.NoItemFlags
+        elif index.column() == 4:
             return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
         return super().flags(index)
 

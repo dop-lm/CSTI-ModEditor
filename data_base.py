@@ -63,6 +63,8 @@ class DataBase(object):
         DataBase.AllScriptableObject.update(DataBase.AllScriptableObjectBase)
 
         DataBase.AllRef["CardData"]["Mod"] = []
+        
+        DataBase.AllModSimpCn = {}
 
         for dir in os.listdir(mod_dir):
             if os.path.isdir(mod_dir + r"/" + dir):
@@ -79,21 +81,42 @@ class DataBase(object):
                                 DataBase.AllCardData.update({ref : data["UniqueID"]})
                                 DataBase.AllPath[dir].update({ref : mod_dir + r"/" + dir + r"/" + file})
                                 DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
-                            elif dir == "GameSourceModify":
-                                pass
                             else:
                                 DataBase.AllRef[dir].append(ref)
                                 DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
                                 DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
                                 DataBase.AllPath[dir].update({ref : mod_dir + r"/" + dir + r"/" + file})
                                 DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
-
-
+                elif dir == "GameSourceModify":
+                    pass
+                elif dir == "Localization":
+                    if os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
+                        with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
+                            lines = f.readlines(-1)
+                            for line in lines:
+                                keys = line.split(',')
+                                if len(keys) > 3:
+                                    if line.find('"') != -1:
+                                        new_keys = line.split('"')
+                                        if len(new_keys) == 3 and new_keys[0][-1] == ',' and  new_keys[2][0] == ',':
+                                            DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}  
+                                elif len(keys) == 3:
+                                    DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
+                                else:
+                                    print("Wrong Format Key")
+                elif dir == "Resource":
+                    if os.path.exists(mod_dir + r"/" + dir + r"/Picture"):
+                        for file in os.listdir(mod_dir + r"/" + dir + r"/Picture"):
+                            if file.endswith(".jpg") or file.endswith(".png"):
+                                DataBase.AllRef["Sprite"].append(file[:-4])
+                            if file.endswith(".jpeg"):
+                                DataBase.AllRef["Sprite"].append(file[:-5])
+                    if os.path.exists(mod_dir + r"/" + dir + r"/Audio"):
+                        for file in os.listdir(mod_dir + r"/" + dir + r"/Audio"):
+                            if file.endswith(".wav"):
+                                DataBase.AllRef["AudioClip"].append(file[:-4])
 
         DataBase.AllGuidPlainRev = {v : k for k, v in DataBase.AllGuidPlain.items()}
-
-        # print("1010f586b0571af4bac35f48ed42e05f" in  DataBase.AllGuidPlainRev)
-        # print("LocalizedString" in  DataBase.AllTypeField)
 
     def loadName():
         DataBase.AllRefBase = {}
@@ -182,6 +205,28 @@ class DataBase(object):
     def saveCollection():
         with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllCollection, f)
+
+    def loopLoadModSimpCn(json, mod_name):
+        if type(json) is dict:
+            for key, item in json.items():
+                if key == "LocalizationKey" and type(item) == str and item.startswith(mod_name) and item not in DataBase.AllModSimpCn:
+                    if "DefaultText" in json:
+                        DataBase.AllModSimpCn[item] = {"original": json["DefaultText"], "translate": ""}
+                if type(item) == list:
+                    for sub_item in item:
+                        DataBase.loopLoadModSimpCn(sub_item, mod_name)
+                if type(item) == dict:
+                    DataBase.loopLoadModSimpCn(item, mod_name)
+        
+    def saveModSimpCn(mod_dir):
+        with open(mod_dir + r"/Localization/SimpCn.csv", "w", encoding='utf-8') as f:
+            for key in DataBase.AllModSimpCn:
+                f.write(key)
+                f.write(',"')
+                f.write(DataBase.AllModSimpCn[key]["original"])
+                f.write('",')
+                f.write(DataBase.AllModSimpCn[key]["translate"])
+                f.write('\n')
 
 
     # def loadTemplate():

@@ -134,6 +134,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
             with open(self.tab_item_dict[self.tabWidget.tabText(index)]["path"], "w") as f:
                 json.dump(save_data, f, indent = 4)
+            DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
             del self.tab_item_dict[self.tabWidget.tabText(index)]
             self.tabWidget.removeTab(index)  
         elif reply == QMessageBox.No:
@@ -166,7 +167,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, '警告','请先关闭所有子菜单')
             return
             
-        self.new_mod = NewItemGUI.NewModGUI(self)
+        self.new_mod = NewItemGUI.NewItemGUI(self)
         self.new_mod.buttonBox.accepted.connect(self.on_newModButtonBoxAccepted)
         self.new_mod.exec_()
 
@@ -190,10 +191,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 save_data = self.tabWidget.widget(i).treeView.model().sourceModel().to_json()
                 with open(self.tab_item_dict[self.tabWidget.tabText(i)]["path"], "w") as f:
                     json.dump(save_data, f, indent = 4)
+                DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
             with open(self.mod_path + "/ModInfo.json", "w") as f:
                 json.dump(self.mod_info, f, indent = 4)
 
             DataBase.saveCollection()
+            DataBase.saveModSimpCn(self.mod_path)
         
     def on_loadMod(self):
         if self.tab_item_dict:
