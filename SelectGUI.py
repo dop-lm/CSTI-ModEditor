@@ -11,6 +11,7 @@ class SelectGUI(QDialog, Ui_Select):
     NewData = 1
     Copy = 2
     Append = 3
+    Special = 4
 
     def __init__(self, parent = None, field_name = "", checked = False, type = 0):
         super(SelectGUI, self).__init__(parent)
@@ -31,6 +32,9 @@ class SelectGUI(QDialog, Ui_Select):
 
         if type == SelectGUI.Append:
             self.setWindowTitle("追加" + field_name + "属性")
+
+        if type == SelectGUI.Special:
+            self.setWindowTitle("添加特殊属性")
 
         try:
             if self.field_name == "CardData":
@@ -73,6 +77,18 @@ class SelectGUI(QDialog, Ui_Select):
                             reflist.extend(DataBase.AllRef[key])
                         self.horizontalLayout_CheckBox.addWidget(checkBox)
                 self.m_completer = QCompleter(reflist, self)
+            elif self.field_name == "BlueprintCardDataCardTabGroup":
+                self.comboBox.addItems(DataBase.AllBlueprintTab)
+                self.m_completer = QCompleter(DataBase.AllBlueprintTab, self)
+            elif self.field_name == "BlueprintCardDataCardTabSubGroup":
+                self.comboBox.addItems(DataBase.AllBlueprintSubTab)
+                self.m_completer = QCompleter(DataBase.AllBlueprintSubTab, self)
+            elif self.field_name == "CharacterPerkPerkGroup":
+                self.comboBox.addItems(DataBase.AllRef["PerkGroup"])
+                self.m_completer = QCompleter(DataBase.AllRef["PerkGroup"], self)
+            elif self.field_name == "VisibleGameStatStatListTab":
+                self.comboBox.addItems(DataBase.AllRef["StatListTab"])
+                self.m_completer = QCompleter(DataBase.AllRef["StatListTab"], self)
             else:
                 pass
             

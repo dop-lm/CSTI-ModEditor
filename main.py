@@ -16,7 +16,7 @@ import NewItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.0.2"
+ModEditorVersion = "0.0.4"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     groupname_list = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction"]
@@ -151,7 +151,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 return
             else:
                 tab_key = treeItem.parent().text(0) + ":" + treeItem.text(0)
-                if treeItem.text(0) in self.tab_item_dict:
+                if tab_key in self.tab_item_dict:
                     pass
                 else:
                     item = ItemGUI.ItemGUI(root.text(0), self.tabWidget)
@@ -197,6 +197,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
             DataBase.saveCollection()
             DataBase.saveModSimpCn(self.mod_path)
+            DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
         
     def on_loadMod(self):
         if self.tab_item_dict:

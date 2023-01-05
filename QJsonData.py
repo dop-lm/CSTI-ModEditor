@@ -55,6 +55,11 @@ class QJsonTreeItem(object):
     def childCount(self):
         return len(self.mChilds)
 
+    def childRow(self, key: str):
+        if key in self.mChilds:
+            return list(self.mChilds.keys()).index(key)
+        return None
+
     def row(self):
         if self.mParent is not None:
             return list(self.mParent.mChilds.keys()).index(self.mKey)
@@ -369,6 +374,9 @@ class QJsonModel(QAbstractItemModel):
             item = index.internalPointer()
             if item is None:
                 item = self.mRootItem
+            if key in item.mChilds:
+                childIndex = self.index(item.childRow(key), 0, index)
+                self.deleteItem(childIndex)
             self.beginInsertRows(index, item.childCount(), item.childCount())
             childItem = QJsonTreeItem.load(json, field, item, key)
             childItem.setVaild(True)
@@ -391,7 +399,10 @@ class QJsonModel(QAbstractItemModel):
         try:
             item = index.internalPointer()
             if item is None:
-                item = self.mRootItemf
+                item = self.mRootItem
+            if key in item.mChilds:
+                childIndex = self.index(item.childRow(key), 0, index)
+                self.deleteItem(childIndex)
             self.beginInsertRows(index, item.childCount(), item.childCount())
             childItem = QJsonTreeItem.newItem(item, key, type, value, field, vaild)
             childItem.setVaild(True)
@@ -441,10 +452,14 @@ class QJsonModel(QAbstractItemModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         if index.column() == 1:
             item = index.internalPointer()
-            if item.key() == "UniqueID" or item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith("WarpType") or item.key().endswith("WarpData"):
+            if item.key() == "UniqueID":
+                return Qt.ItemFlag.ItemIsEnabled
+            if item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith("WarpType") or item.key().endswith("WarpData"):
                 return Qt.ItemFlag.NoItemFlags
             if item.type() == "list":
                 return Qt.ItemFlag.NoItemFlags
+            if item.field() in DataBase.AllEnum:
+                return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled 
             if item.field() != "Boolean" and item.field() != "Int32" and item.field() != "Single" and item.field() != "String":
                 return Qt.ItemFlag.NoItemFlags
             return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled

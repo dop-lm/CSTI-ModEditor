@@ -140,11 +140,60 @@ class ItemGUI(QWidget, Ui_Item):
         self.showInvalidButton.clicked.connect(self.on_showInvalidButtonClicked)
 
         self.lineEdit.textChanged.connect(self.on_lineEditTextChanged)
-        # self.treeView.doubleClicked.connect(self.on_treeViewDoubleClicked)
+
+        if self.field == "CardData":
+            tabButton = QPushButton("添加蓝图主分组", self)
+            tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
+            self.horizontalLayout.insertWidget(2, tabButton)
+            subTabButton = QPushButton("添加蓝图次分组", self)
+            subTabButton.clicked.connect(self.on_tabButtonCardDataSubTabGroup)
+            self.horizontalLayout.insertWidget(3, subTabButton)
+            label = QLabel("不是蓝图的卡别添加")
+            self.horizontalLayout.insertWidget(4, label)
+        if self.field == "CharacterPerk":
+            tabButton = QPushButton("添加特性互斥组", self)
+            self.horizontalLayout.insertWidget(2, tabButton)
+            tabButton.clicked.connect(self.on_tabButtonCharacterPerk)
+        if self.field == "GameStat":
+            tabButton = QPushButton("添加可显示状态分组", self)
+            self.horizontalLayout.insertWidget(2, tabButton)
+            tabButton.clicked.connect(self.on_tabButtonGameStat)
 
         # self.test_button = QPushButton("Test")
         # self.horizontalLayout.addWidget(self.test_button)
         # self.test_button.clicked.connect(self.on_test)
+
+    def on_tabButtonCardDataMainTabGroup(self):
+        select = SelectGUI(self.treeView, field_name = "BlueprintCardDataCardTabGroup", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabGroup", str, select.lineEdit.text(), "Special", True)
+            return
+
+    def on_tabButtonCardDataSubTabGroup(self):
+        select = SelectGUI(self.treeView, field_name = "BlueprintCardDataCardTabSubGroup", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabSubGroup", str, select.lineEdit.text(), "Special", True)
+            return
+
+    def on_tabButtonCharacterPerk(self):
+        select = SelectGUI(self.treeView, field_name = "CharacterPerkPerkGroup", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            self.model.addItem(QModelIndex(), "CharacterPerkPerkGroup", str, select.lineEdit.text(), "Special", True)
+            return
+
+    def on_tabButtonGameStat(self):
+        select = SelectGUI(self.treeView, field_name = "VisibleGameStatStatListTab", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            self.model.addItem(QModelIndex(), "VisibleGameStatStatListTab", str, select.lineEdit.text(), "Special", True)
+            return
 
     def loadJsonData(self, json_data):
         self.model = QJsonModel(self.field)
@@ -189,7 +238,8 @@ class ItemGUI(QWidget, Ui_Item):
                         pRefAct = QAction("引用", menu)
                     pRefAct.triggered.connect(self.on_addRefItem)
                     menu.addAction(pRefAct)
-                elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "":
+                elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
+                    item.field() == "Special" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
                     pass
                 else:
                     if item.depth() == 1:

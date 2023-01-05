@@ -2,11 +2,20 @@
 import json
 import sys
 import os
+import copy
 
 class DataBase(object):
     DataDir = None
     RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite"]
     RefGuidList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction"]
+
+    AllSpecialTypeField = {}
+    AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup"]
+    AllSpecialTypeField["CharacterPerk"] = ["CharacterPerkPerkGroup"]
+    AllSpecialTypeField["GameStat"] = ["VisibleGameStatStatListTab"]
+
+    AllBlueprintTab = []
+    AllBlueprintSubTab = []
 
     AllEnum = {}
     AllEnumRev = {}
@@ -43,6 +52,9 @@ class DataBase(object):
         # Load Template
         # DataBase.loadTemplate()
 
+        # Load SpecialTypeField
+        DataBase.loadSpecialTypeField()
+
         # Load Collection
         DataBase.loadCollection()
 
@@ -55,12 +67,12 @@ class DataBase(object):
         DataBase.AllPath = {}           # DataBase.AllPath["GameStat"] [Ref] -> FilePath
         DataBase.AllScriptableObject = {}   # DataBase.AllScriptableObject[Ref] -> Guid or Ref
 
-        DataBase.AllRef.update(DataBase.AllRefBase)
-        DataBase.AllGuid.update(DataBase.AllGuidBase)
-        DataBase.AllGuidPlain.update(DataBase.AllGuidPlainBase)
-        DataBase.AllCardData.update(DataBase.AllCardDataBase)
-        DataBase.AllPath.update(DataBase.AllPathBase)
-        DataBase.AllScriptableObject.update(DataBase.AllScriptableObjectBase)
+        DataBase.AllRef.update(copy.deepcopy(DataBase.AllRefBase))
+        DataBase.AllGuid.update(copy.deepcopy(DataBase.AllGuidBase))
+        DataBase.AllGuidPlain.update(copy.deepcopy(DataBase.AllGuidPlainBase))
+        DataBase.AllCardData.update(copy.deepcopy(DataBase.AllCardDataBase))
+        DataBase.AllPath.update(copy.deepcopy(DataBase.AllPathBase))
+        DataBase.AllScriptableObject.update(copy.deepcopy(DataBase.AllScriptableObjectBase))
 
         DataBase.AllRef["CardData"]["Mod"] = []
         
@@ -129,6 +141,14 @@ class DataBase(object):
                     temp = list(map(lambda x: x.replace("\n",""), temp))
                     DataBase.AllRefBase[file[:-4]] = temp
                     DataBase.AllScriptableObjectBase.update({k : k for k in temp})
+                    if file[:-4] == "CardTabGroup":
+                        for item in temp:
+                            if item.startswith("Tab_"):
+                                if item.count("_") == 1:
+                                    DataBase.AllBlueprintTab.append(item)
+                                else:
+                                    DataBase.AllBlueprintSubTab.append(item)
+
 
     def loadGuid():
         DataBase.AllGuidBase = {}  # Type: {Key: Guid}
@@ -196,6 +216,12 @@ class DataBase(object):
         
         for key, item in DataBase.AllEnum.items():
             DataBase.AllEnumRev[key] = {v : k for k, v in DataBase.AllEnum[key].items()}
+
+    def loadSpecialTypeField():
+        for key, item_list in DataBase.AllSpecialTypeField.items():
+            if key in DataBase.AllTypeField:
+                for item in item_list:
+                    DataBase.AllTypeField[key][item] = "Special"
 
     def loadCollection():
         if os.path.exists(DataBase.DataDir + r"/Mods/" + r"Collection.json"):
