@@ -6,8 +6,9 @@ import copy
 
 class DataBase(object):
     DataDir = None
-    RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite"]
-    RefGuidList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction"]
+    RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet"]
+    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction"]
+    SupportList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction"]
 
     AllSpecialTypeField = {}
     AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup"]
@@ -21,14 +22,16 @@ class DataBase(object):
     AllEnumRev = {}
     AllTypeField = {}
 
-    AllRef = {}             # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[Guid]
-    AllGuid = {}            # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][Ref] -> Guid
-    AllGuidPlain = {}       # DataBase.AllGuidPlain[Ref] -> Guid
-    AllGuidPlainRev = {}    # DataBase.AllGuidPlainRev[Guid] -> Ref
-    AllCardData = {}        # DataBase.AllCardData[Ref] -> CardData Guid
-    AllPath = {}            # DataBase.AllPath["GameStat"] [Ref] -> FilePath
+    AllRef = {}             # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[RefTrans]
+    AllGuid = {}            # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][RefTrans] -> Guid
+    AllGuidPlain = {}       # DataBase.AllGuidPlain[RefTrans/Ref] -> Guid
+    AllGuidPlainRev = {}    # DataBase.AllGuidPlainRev[Guid] -> RefTrans/Ref
+    AllCardData = {}        # DataBase.AllCardData[RefTrans] -> CardData Guid
+    AllPath = {}            # DataBase.AllPath["GameStat"][Ref] -> FilePath
+    AllPathPlain = {}       # DataBase.AllPathPlain[Ref] -> FilePath
     AllScriptableObject = {}   # DataBase.AllScriptableObject[Ref] -> Guid or Ref
-    AllCollection = {}      # DataBase.AllCollection["CardsDropCollection"][Name] -> json data
+    AllCollection = {}      # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
+    AllNotes = {}           # DataBase.AllNotes["CardData"]["CardName"] -> Note
 
 
     def __init__(self):
@@ -58,14 +61,17 @@ class DataBase(object):
         # Load Collection
         DataBase.loadCollection()
 
+        # Load Note
+        DataBase.loadNote()
+
     def LoadModData(mod_name, mod_dir):
-        DataBase.AllRef = {}            # DataBase.AllRef["ActionTag"] -> list[Ref]             DataBase.AllRef["CardData"]["Item"] -> list[Guid]
-        DataBase.AllGuid = {}           # DataBase.AllGuid["GameStat"][Ref] -> Guid        DataBase.AllGuid["CardData"]["Item"][Ref] -> Guid
-        DataBase.AllGuidPlain = {}      # DataBase.AllGuidPlain[Ref] -> Guid
-        DataBase.AllGuidPlainRev = {}   # DataBase.AllGuidPlainRev[Guid] -> Ref
-        DataBase.AllCardData = {}       # DataBase.AllCardData[Ref] -> CardData Guid
-        DataBase.AllPath = {}           # DataBase.AllPath["GameStat"] [Ref] -> FilePath
-        DataBase.AllScriptableObject = {}   # DataBase.AllScriptableObject[Ref] -> Guid or Ref
+        DataBase.AllRef = {}
+        DataBase.AllGuid = {}
+        DataBase.AllGuidPlain = {}
+        DataBase.AllGuidPlainRev = {}
+        DataBase.AllCardData = {}
+        DataBase.AllPath = {}
+        DataBase.AllScriptableObject = {}  
 
         DataBase.AllRef.update(copy.deepcopy(DataBase.AllRefBase))
         DataBase.AllGuid.update(copy.deepcopy(DataBase.AllGuidBase))
@@ -127,6 +133,9 @@ class DataBase(object):
                         for file in os.listdir(mod_dir + r"/" + dir + r"/Audio"):
                             if file.endswith(".wav"):
                                 DataBase.AllRef["AudioClip"].append(file[:-4])
+
+        for key in DataBase.AllPath:
+            DataBase.AllPathPlain.update(copy.deepcopy(DataBase.AllPath[key]))
 
         DataBase.AllGuidPlainRev = {v : k for k, v in DataBase.AllGuidPlain.items()}
 
@@ -254,6 +263,18 @@ class DataBase(object):
                 f.write(DataBase.AllModSimpCn[key]["translate"])
                 f.write('\n')
 
+    def loadNote():
+        if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/Notes'):
+            for file in os.listdir(DataBase.DataDir + r'/CSTI-JsonData/Notes'):
+                if file.endswith(".txt"):
+                    DataBase.AllNotes[file[:-4]] = {}
+                    with open(DataBase.DataDir + r'/CSTI-JsonData/Notes/' + file, "r", encoding='utf-8') as f:
+                        lines = f.readlines()
+                        for line in lines:
+                            line = line.replace("\n", "")
+                            items = line.split("\t")
+                            if len(items) == 2:
+                                DataBase.AllNotes[file[:-4]][items[0]] = items[1]
 
     # def loadTemplate():
     #     DataBase.AllTemplateBase = {}

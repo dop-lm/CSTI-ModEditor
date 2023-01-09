@@ -1,3 +1,4 @@
+*.code-workspace
 CSTI-JsonData/
 __pycache__/
 backup/

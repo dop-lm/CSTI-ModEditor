@@ -6,120 +6,9 @@ from Ui_Item import *
 from QJsonData import *
 from SelectGUI import *
 from NewItemGUI import *
+from ItemDelegate import *
 from CollectionGUI import *
 from data_base import *
-
-class ItemDelegate(QItemDelegate):
-    def __init__(self, field = "", parent = None):
-        super(ItemDelegate, self).__init__(parent)
-        self.field = field
-
-    def createEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
-        model = index.model()
-
-        if hasattr(model, 'mapToSource'):
-            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-        else:
-            srcModel, item, srcIndex = model, index.internalPointer(), index
-
-        if item.field() == "Boolean":
-            return self.createBoolEditor(parent, option, index)
-        elif item.field() == "Int32":
-            return self.createIntEditor(parent, option, index)
-        elif item.field() == "Single":
-            return self.createDoubleEditor(parent, option, index)
-        elif item.field() == "String":
-            pass
-        elif item.field() in DataBase.AllEnum and item.type() != "list":
-            return self.createSelectEditor(parent, option, index, item.field())
-        else:
-            return super().createEditor(parent, option, index)
-        return super().createEditor(parent, option, index)
-
-    def createBoolEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
-        editor = QLabel(parent)
-        editor.setAutoFillBackground(True)
-        return editor
-
-    def createIntEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
-        editor = QLineEdit(parent)
-        editor.setValidator(QIntValidator(editor))
-        return editor
-
-    def createDoubleEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
-        editor = QLineEdit(parent)
-        editor.setValidator(QDoubleValidator(editor))
-        return editor
-
-    def createSelectEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex, field_name = "", type = SelectGUI.Ref) -> QWidget:
-        editor = SelectGUI(parent, field_name = field_name, type = type)
-        return editor
-
-    def setEditorData(self, editor: QWidget, index: QtCore.QModelIndex) -> None:
-        model = index.model()
-        if hasattr(model, 'mapToSource'):
-            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-        else:
-            srcModel, item, srcIndex = model, index.internalPointer(), index
-
-        if item.field() == "Boolean":
-            self.setBoolEditorData(editor, index)
-            return
-        elif item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
-            item.setVaild(True)
-            editor.setText(str(index.data()))
-            return
-        else:
-            pass
-        return super().setEditorData(editor, index)
-
-    def setBoolEditorData(self, editor: QWidget, index: QtCore.QModelIndex) -> None:
-        model = index.model()
-        if hasattr(model, 'mapToSource'):
-            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-        else:
-            srcModel, item, srcIndex = model, index.internalPointer(), index
-
-        item.setVaild(True)
-        if str(index.data()) == "False":
-            editor.setText("True")
-        else:
-            editor.setText("False")
-
-    def setModelData(self, editor: QWidget, model: QtCore.QAbstractItemModel, index: QtCore.QModelIndex) -> None:
-        model = index.model()
-        if hasattr(model, 'mapToSource'):
-            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-        else:
-            srcModel, item, srcIndex = model, index.internalPointer(), index
-            
-        if item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
-            pass 
-        elif item.field() in DataBase.AllEnum:
-            if editor.write_flag:
-                if editor.lineEdit.text() in DataBase.AllEnum[item.field()]:
-                    srcModel.setData(srcIndex, DataBase.AllEnum[item.field()][editor.lineEdit.text()], Qt.EditRole)
-            return
-        return super().setModelData(editor, model, index)
-
-    # def updateEditorGeometry(self, editor: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> None:
-    #     editor.setGeometry(option.rect)
-    #     return super().updateEditorGeometry(editor, option, index)
-
-class EnableDelegate(QItemDelegate):
-    def __init__(self, parent = None):
-        super(EnableDelegate, self).__init__(parent)
-
-    def createEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
-        editor = QLabel(parent)
-        editor.setAutoFillBackground(True)
-        return editor
-
-    def setEditorData(self, editor: QWidget, index: QtCore.QModelIndex) -> None:
-        if str(index.data()) == "False":
-            editor.setText("True")
-        else:
-            editor.setText("False")
 
 class ItemGUI(QWidget, Ui_Item):
     def __init__(self, field, parent = None):
@@ -238,7 +127,7 @@ class ItemGUI(QWidget, Ui_Item):
                         pRefAct = QAction("引用", menu)
                     pRefAct.triggered.connect(self.on_addRefItem)
                     menu.addAction(pRefAct)
-                elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
+                elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
                     item.field() == "Special" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
                     pass
                 else:
@@ -256,7 +145,6 @@ class ItemGUI(QWidget, Ui_Item):
                         pCopyCollAct = QAction("复制收藏并覆盖", menu)
                         pCopyCollAct.triggered.connect(self.on_copyCollItem)
                         menu.addAction(pCopyCollAct)
-                    # if item.parent().type() == "list" and item.depth() > 1:
                     
                         pSaveAct = QAction("收藏", menu)
                         pSaveAct.triggered.connect(self.on_saveItem)
@@ -270,8 +158,6 @@ class ItemGUI(QWidget, Ui_Item):
                         pNewAct = QAction("载入收藏", menu)
                         pNewAct.triggered.connect(self.on_loadListItem)
                         menu.addAction(pNewAct)
-
-                    
 
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
@@ -360,6 +246,7 @@ class ItemGUI(QWidget, Ui_Item):
 
         self.newSave = NewItemGUI(self)
         self.newSave.buttonBox.accepted.connect(lambda : self.on_newSaveButtonBoxAccepted(item))
+        self.newSave.setWindowTitle("添加" + item.field() + "类型收藏")
         self.newSave.exec_()
 
     def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
@@ -436,13 +323,15 @@ class ItemGUI(QWidget, Ui_Item):
                         if select.lineEdit.text() in DataBase.AllCardData:
                             self.model.addRefWarp(index, DataBase.AllCardData[select.lineEdit.text()])
                             return
-                    elif item.field() == "ScriptableObject":
-                        self.mode.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
                     else:
                         if select.lineEdit.text() in DataBase.AllGuid[item.field()]:
                             self.model.addRefWarp(index, DataBase.AllGuid[item.field()][select.lineEdit.text()])
                             return
-                self.model.addRefWarp(index, select.lineEdit.text())
+                elif item.field() in DataBase.RefNameList:
+                    self.model.addRefWarp(index, select.lineEdit.text())
+                elif item.field() == "ScriptableObject":
+                    self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
+                    return
 
     # def on_test(self):
     #     index = self.treeView.currentIndex()

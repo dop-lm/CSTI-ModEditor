@@ -13,14 +13,13 @@ import uuid
 from data_base import *
 import ItemGUI
 import NewItemGUI
+import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.0.4"
+ModEditorVersion = "0.1.1"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
-    groupname_list = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction"]
-
     def __init__(self, parent = None):
         super(ModEditorGUI, self).__init__(parent)
         self.setupUi(self)
@@ -75,9 +74,14 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             root = hititem.parent()
             pmenu = QMenu(self)
             if root is None:
-                pAddAct = QAction("新建", pmenu)
-                pAddAct.triggered.connect(self.on_newCard)
-                pmenu.addAction(pAddAct)
+                if hititem.text(0) == "GameSourceModify":
+                    pAddAct = QAction("新建修改", pmenu)
+                    pAddAct.triggered.connect(self.on_newModify)
+                    pmenu.addAction(pAddAct)
+                else:
+                    pAddAct = QAction("新建", pmenu)
+                    pAddAct.triggered.connect(self.on_newCard)
+                    pmenu.addAction(pAddAct)
             else:
                 tab_key = root.text(0) + ":" + hititem.text(0)
                 if not tab_key in self.tab_item_dict:
@@ -97,7 +101,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 template_key = select.lineEdit.text().split("(")[0]
                 try:
                     card_name = select.name_editor.text()
-                    if card_name:
+                    if card_name and template_key:
                         if not card_name in self.tree_item_dict[group_name]:
                             child = QTreeWidgetItem()
                             child.setText(0, card_name)
@@ -111,6 +115,51 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                 f.write(temp_data)
                             self.group_dict[group_name].addChild(child)
                             self.tree_item_dict[group_name][card_name] = {"path": child_path}
+                        else:
+                            QMessageBox.warning(self, '警告','存在同名文件')
+                except Exception as ex:
+                    print(traceback.format_exc())
+
+    def on_newModify(self) -> None:
+        hititem = self.treeWidget.currentItem()
+        if hititem:
+            root = hititem.parent()
+            if root is None:
+                group_name = hititem.text(0)
+                select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewModify)
+                select.exec_()
+                target_key = select.lineEdit.text()
+                template_key = select.lineEdit.text().split("(")[0]
+                try:
+                    card_name = select.name_editor.text()
+                    if card_name and template_key:
+                        if not card_name in self.tree_item_dict[group_name]:
+                            child = QTreeWidgetItem()
+                            child.setText(0, card_name)
+                            os.mkdir(self.mod_path + "/" + group_name + "/" + card_name)
+
+                            target_group_name = ""
+                            target_guid = DataBase.AllGuidPlain[target_key]
+                            for type_key in DataBase.AllRef["CardData"].keys():
+                                if target_key in DataBase.AllRef["CardData"][type_key]:
+                                    target_group_name = "CardData"
+                                    break
+                            
+                            for group_key in DataBase.AllGuid.keys():
+                                if target_key in DataBase.AllGuid[group_key]:
+                                    target_group_name = group_key
+                                    break
+                            if target_group_name and target_guid:
+                                child_path = self.mod_path + "/" + group_name + "/" + card_name + "/" + target_guid + ".json"
+                                child_dir = self.mod_path + "/" + group_name + "/" + card_name
+                                
+                                if target_group_name:                                
+                                    with open(child_path, "w") as f:
+                                        f.write("{\n\n}")
+                                    self.group_dict[group_name].addChild(child)
+                                    self.tree_item_dict[group_name][card_name] = {"path": child_path, "dir": child_dir, "template_field": target_group_name}
+                        else:
+                            QMessageBox.warning(self, '警告','存在同名文件')
                 except Exception as ex:
                     print(traceback.format_exc())
 
@@ -124,25 +173,37 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if reply == QMessageBox.Yes:
                 index = root.indexOfChild(hititem)
                 root.takeChild(index)
-                os.remove(self.tree_item_dict[root.text(0)][hititem.text(0)]["path"])
+                if "dir" in self.tree_item_dict[root.text(0)][hititem.text(0)]:
+                    shutil.rmtree(self.tree_item_dict[root.text(0)][hititem.text(0)]["dir"])
+                else:
+                    os.remove(self.tree_item_dict[root.text(0)][hititem.text(0)]["path"])
                 del self.tree_item_dict[root.text(0)][hititem.text(0)]
                 del hititem
+
+    def saveTabJsonItem(self, index: int):
+        if self.tabWidget.tabText(index).startswith("GameSourceModify"):
+            save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
+            self.delGameSourceModifyTemplate(save_data)
+        else:
+            save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
+        with open(self.tab_item_dict[self.tabWidget.tabText(index)]["path"], "w") as f:
+            json.dump(save_data, f, indent = 4)
+        DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
     
     def on_tabWidgetTabCloseRequested(self, index: int):
-        reply = QMessageBox.question(self, '保存', '是否在退出前保存', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
-            with open(self.tab_item_dict[self.tabWidget.tabText(index)]["path"], "w") as f:
-                json.dump(save_data, f, indent = 4)
-            DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
-            del self.tab_item_dict[self.tabWidget.tabText(index)]
-            self.tabWidget.removeTab(index)  
-        elif reply == QMessageBox.No:
-            del self.tab_item_dict[self.tabWidget.tabText(index)]
-            self.tabWidget.removeTab(index)
-        elif reply == QMessageBox.Cancel:
-            return
-        # print("on_tabWidgetTabCloseRequested", index)
+        try:
+            reply = QMessageBox.question(self, '保存', '是否在退出前保存', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                self.saveTabJsonItem(index)
+                del self.tab_item_dict[self.tabWidget.tabText(index)]
+                self.tabWidget.removeTab(index)  
+            elif reply == QMessageBox.No:
+                del self.tab_item_dict[self.tabWidget.tabText(index)]
+                self.tabWidget.removeTab(index)
+            elif reply == QMessageBox.Cancel:
+                return
+        except Exception as ex:
+            print(traceback.format_exc())
 
     def on_treeWidgetItemDoubleClicked(self, treeItem: QTreeWidgetItem, column: int):
         if treeItem:
@@ -154,65 +215,92 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 if tab_key in self.tab_item_dict:
                     pass
                 else:
-                    item = ItemGUI.ItemGUI(root.text(0), self.tabWidget)
-                    file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
-                    with open(file_path, 'rb') as f:
-                        item.loadJsonData(f.read(-1))
+                    if treeItem.parent().text(0) == "GameSourceModify":
+                        item = ModifyItemGUI.ModifyItemGUI(self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["template_field"], self.tabWidget)
+                        file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
+                        template_guid = os.path.basename(file_path)[:-5]
+                        template_reftrans = DataBase.AllGuidPlainRev[template_guid]
+                        template_ref = template_reftrans.split("(")[0]
+                        template_path = DataBase.AllPathPlain[template_ref]
+                        with open(file_path, 'rb') as f:
+                            src_json = json.load(f)
+                        with open(template_path, 'rb') as f:
+                            template_json = json.load(f)
+                            self.loopDelGameSourceModifyTemplateWarpper(template_json)
+                        src_json.update(template_json)
+
+                        item.loadJsonData(json.dumps(src_json).encode("utf-8"))
+                    else:
+                        item = ItemGUI.ItemGUI(root.text(0), self.tabWidget)
+                        file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
+                        with open(file_path, 'rb') as f:
+                            item.loadJsonData(f.read(-1))
                     self.tabWidget.addTab(item, tab_key)
                     self.tab_item_dict[tab_key] = {"name": treeItem.text(0), "path":  file_path, "widget": item}
                 self.tabWidget.setCurrentWidget(self.tab_item_dict[tab_key]["widget"])
+
+    def loopDelGameSourceModifyTemplateWarpper(self, json):
+        for key in list(json.keys()):
+            if key.endswith("WarpType") or key.endswith("WarpData"):
+                del json[key]
+        # if type(json) == list:
+        #     for item in json:
+        #         self.loopDelGameSourceModifyTemplateWarpper(item)
+        # elif type(json) == dict:
+        #     for key in list(json.keys()):
+        #         if key.endswith("WarpType") or key.endswith("WarpData"):
+        #             del json[key]
+                # else:
+                #     self.loopDelGameSourceModifyTemplateWarpper(json[key])
+
+    def delGameSourceModifyTemplate(self, json):
+        if type(json) == dict:
+            for key in list(json.keys()):
+                if not key.endswith("WarpType") and not key.endswith("WarpData"):
+                    del json[key]
 
     def on_newMod(self):
         if self.tab_item_dict:
             QMessageBox.warning(self, '警告','请先关闭所有子菜单')
             return
-            
         self.new_mod = NewItemGUI.NewItemGUI(self)
         self.new_mod.buttonBox.accepted.connect(self.on_newModButtonBoxAccepted)
         self.new_mod.exec_()
 
     def on_newModButtonBoxAccepted(self):
         mod_name = self.new_mod.lineEdit.text()
-
         if not mod_name:
             return
-
         if os.path.exists(QDir.currentPath() + r"/Mods/" + mod_name):
             QMessageBox.warning(self, '警告','存在同名Mod文件夹')
             return
-
         shutil.copytree(QDir.currentPath() + r"/CSTI-JsonData/BaseMod", QDir.currentPath() + r"/Mods/" + mod_name)
-
         self.loadMod(QDir.currentPath() + r"/Mods/" + mod_name)
 
     def on_saveMod(self):
         if self.mod_info:
-            for i in range(self.tabWidget.count()):
-                save_data = self.tabWidget.widget(i).treeView.model().sourceModel().to_json()
-                with open(self.tab_item_dict[self.tabWidget.tabText(i)]["path"], "w") as f:
-                    json.dump(save_data, f, indent = 4)
-                DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
-            with open(self.mod_path + "/ModInfo.json", "w") as f:
-                json.dump(self.mod_info, f, indent = 4)
+            try:
+                for i in range(self.tabWidget.count()):
+                    self.saveTabJsonItem(i)
+                with open(self.mod_path + "/ModInfo.json", "w") as f:
+                    json.dump(self.mod_info, f, indent = 4)
 
-            DataBase.saveCollection()
-            DataBase.saveModSimpCn(self.mod_path)
-            DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
+                DataBase.saveCollection()
+                DataBase.saveModSimpCn(self.mod_path)
+                DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
+            except Exception as ex:
+                print(traceback.format_exc())
         
     def on_loadMod(self):
         if self.tab_item_dict:
             QMessageBox.warning(self, '警告','请先关闭所有子菜单')
             return
-        
         mod_path = QFileDialog.getExistingDirectory(self, caption='选择Mod文件夹', directory=QDir.currentPath())
-
         if mod_path is None or mod_path == "":
             return
-
         if "ModInfo.json" not in os.listdir(mod_path):
             QMessageBox.warning(self, '警告','不是一个有效的Mod文件夹')
             return
-
         self.loadMod(mod_path)
 
     def loadMod(self, mod_path):
@@ -227,16 +315,39 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
         DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
         for item in os.listdir(self.mod_path):
-            if item in self.groupname_list:
+            if item in DataBase.SupportList:
                 group = QTreeWidgetItem(self.treeWidget)
                 group.setText(0, item)
                 self.tree_item_dict[item] = {}
-                for sub_item in os.listdir(self.mod_path + "/" + item):
-                    if sub_item.endswith(".json"):
-                        child = QTreeWidgetItem()
-                        child.setText(0, sub_item[:-5])
-                        group.addChild(child)
-                        self.tree_item_dict[item][sub_item[:-5]] = {"path": self.mod_path + "/" + item  + "/" + sub_item}
+                if item == "GameSourceModify":
+                    for sub_dir in os.listdir(self.mod_path + "/" + item):
+                        if os.path.isdir(self.mod_path + "/" + item + "/" + sub_dir):
+                            for file in os.listdir(self.mod_path + "/" + item + "/" + sub_dir):
+                                if file.endswith(".json"):
+                                    child = QTreeWidgetItem()
+                                    child.setText(0, sub_dir)
+                                    group.addChild(child)
+
+                                    template_reftrans = DataBase.AllGuidPlainRev[file[:-5]]
+                                    for type_key in DataBase.AllRef["CardData"].keys():
+                                        if template_reftrans in DataBase.AllRef["CardData"][type_key]:
+                                            target_group_name = "CardData"
+                                            break
+                                    for group_key in DataBase.AllGuid.keys():
+                                        if template_reftrans in DataBase.AllGuid[group_key]:
+                                            target_group_name = group_key
+                                            break
+                                    self.tree_item_dict[item][sub_dir] = {"path": self.mod_path + "/" + item  + "/" + sub_dir + "/" + file, \
+                                        "dir": self.mod_path + "/" + item  + "/" + sub_dir, \
+                                            "template_field": target_group_name}
+                                    break
+                else:
+                    for sub_item in os.listdir(self.mod_path + "/" + item):
+                        if sub_item.endswith(".json"):
+                            child = QTreeWidgetItem()
+                            child.setText(0, sub_item[:-5])
+                            group.addChild(child)
+                            self.tree_item_dict[item][sub_item[:-5]] = {"path": self.mod_path + "/" + item  + "/" + sub_item}
                 group.setExpanded(True)
                 self.group_dict[item] = group
         self.setWindowTitle("ModEditor (%s)" % (self.mod_info["Name"]))

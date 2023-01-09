@@ -12,17 +12,26 @@ class SelectGUI(QDialog, Ui_Select):
     Copy = 2
     Append = 3
     Special = 4
+    NewModify = 5
 
     def __init__(self, parent = None, field_name = "", checked = False, type = 0):
         super(SelectGUI, self).__init__(parent)
         self.setupUi(self)
         self.field_name = field_name
         self.write_flag = False
+        self.modify_type = None
         self.setWindowTitle("添加" + field_name + "引用类型")
 
         if type == SelectGUI.NewData:
             self.setWindowTitle("选择一个" + field_name + "模板")
             label = QLabel("卡片名字", self)
+            self.name_editor = QLineEdit(self)
+            self.verticalLayout.insertWidget(0, self.name_editor)
+            self.verticalLayout.insertWidget(0, label)
+
+        if type == SelectGUI.NewModify:
+            self.setWindowTitle("选择一个" + field_name + "对象")
+            label = QLabel("名字", self)
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
@@ -50,6 +59,32 @@ class SelectGUI(QDialog, Ui_Select):
                     self.comboBox.addItems(DataBase.AllRef[self.field_name][key])
                     reflist.extend(DataBase.AllRef[self.field_name][key])
                     self.horizontalLayout_CheckBox.addWidget(checkBox)
+                self.m_completer = QCompleter(reflist, self)
+            elif self.field_name == "GameSourceModify":
+                reflist = []
+                self.checkBoxList = {}
+                for key in DataBase.AllRef["CardData"].keys():
+                    checkBox = QCheckBox()
+                    checkBox.setText(key)
+                    if checked:
+                        checkBox.setChecked(True)
+                    checkBox.stateChanged.connect(self.on_GameSourceModifyCheckBoxStateChanged)
+                    self.checkBoxList[key] = checkBox
+                    self.comboBox.addItems(DataBase.AllRef["CardData"][key])
+                    reflist.extend(DataBase.AllRef["CardData"][key])
+                    self.horizontalLayout_CheckBox.addWidget(checkBox)
+                for key in DataBase.AllGuid.keys():
+                    if key == "CardData":
+                        continue
+                    checkBox = QCheckBox()
+                    checkBox.setText(key)
+                    if checked:
+                        checkBox.setChecked(True)
+                    checkBox.stateChanged.connect(self.on_GameSourceModifyCheckBoxStateChanged)
+                    self.checkBoxList[key] = checkBox
+                    self.comboBox.addItems(list(DataBase.AllGuid[key].keys()))
+                    reflist.extend(list(DataBase.AllGuid[key]))
+                    self.horizontalLayout_CheckBox2.addWidget(checkBox)
                 self.m_completer = QCompleter(reflist, self)
             elif self.field_name in DataBase.AllEnum:
                 self.comboBox.addItems(DataBase.AllEnum[self.field_name].keys())
@@ -108,6 +143,19 @@ class SelectGUI(QDialog, Ui_Select):
             if self.checkBoxList[key].isChecked():
                 reflist.extend(DataBase.AllRef[self.field_name][key])
                 self.comboBox.addItems(DataBase.AllRef[self.field_name][key])
+        self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
+
+    def on_GameSourceModifyCheckBoxStateChanged(self, a0: int):
+        self.comboBox.clear()
+        reflist = []
+        for key in self.checkBoxList.keys():
+            if self.checkBoxList[key].isChecked():
+                if key in DataBase.AllRef["CardData"]:
+                    reflist.extend(DataBase.AllRef["CardData"][key])
+                    self.comboBox.addItems(DataBase.AllRef["CardData"][key])
+                elif key in DataBase.AllGuid:
+                    reflist.extend(list(DataBase.AllGuid[key].keys()))
+                    self.comboBox.addItems(list(DataBase.AllGuid[key].keys()))
         self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
 
     def on_ScriptableObjectCheckBoxStateChanged(self, a0: int):

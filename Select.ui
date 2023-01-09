@@ -46,6 +46,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout_CheckBox"/>
      </item>
      <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_CheckBox2"/>
+     </item>
+     <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
