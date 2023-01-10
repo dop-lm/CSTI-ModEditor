@@ -62,6 +62,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.tabCloseRequested.connect(self.on_tabWidgetTabCloseRequested)
 
+        self.srcTitle = self.windowTitle() + ModEditorVersion
+        self.setWindowTitle(self.srcTitle)
+
     def closeEvent(self, event) -> None:
         reply = QMessageBox.question(self, '保存', '是否在退出前保存(收藏、子菜单、本地化)', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
         if reply == QMessageBox.Yes:
@@ -354,7 +357,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                             self.tree_item_dict[item][sub_item[:-5]] = {"path": self.mod_path + "/" + item  + "/" + sub_item}
                 group.setExpanded(True)
                 self.group_dict[item] = group
-        self.setWindowTitle("ModEditor (%s)" % (self.mod_info["Name"]))
+        self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"]))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

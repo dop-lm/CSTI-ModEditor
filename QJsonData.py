@@ -24,6 +24,7 @@ class QJsonTreeItem(object):
         self.mVaild = False
         self.mDepth = None
         self.mNote = None
+        self.mCustomNote = ""
 
     def appendChild(self, key, item):
         self.mChilds[key] = item
@@ -100,6 +101,9 @@ class QJsonTreeItem(object):
     def setNote(self, value:str):
         self.mNote = value
 
+    def setCustomNote(self, value:str):
+        self.mCustomNote = value
+
     def setType(self, type:QJsonValue.Type):
         if type == QJsonValue.Type.Array or type == list:
             self.mType = "list"
@@ -136,6 +140,9 @@ class QJsonTreeItem(object):
 
     def note(self):
         return self.mNote
+
+    def customNote(self):
+        return self.mCustomNote
 
     def load(value, itemField = "", parent = None, itemKey = None):
         rootItem = QJsonTreeItem(parent)
@@ -300,7 +307,7 @@ class QJsonModel(QAbstractItemModel):
     def __init__(self, root_field, parent = None, is_modify = False):
         super().__init__(parent)
         self.mRootItem = QJsonTreeItem()
-        self.mHeaders = ["key", "value", "field", "type", "vaild", "note"]
+        self.mHeaders = ["key", "value", "field", "type", "vaild", "note", "custom note"]
         self.root_field = root_field
         self.is_modify = is_modify
 
@@ -672,6 +679,8 @@ class QJsonModel(QAbstractItemModel):
                     item.setVaild(False)
                 else:
                     item.setVaild(True)
+            elif index.column() == 6:
+                item.setCustomNote(value)
         else:
             return False
         return True
@@ -698,6 +707,8 @@ class QJsonModel(QAbstractItemModel):
                 if item.field() != "Boolean" and item.field() != "Int32" and item.field() != "Single" and item.field() != "String":
                     return Qt.ItemFlag.NoItemFlags
                 return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
+            elif index.column() == 6:
+                return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
             else:
                 return Qt.ItemFlag.NoItemFlags
         if index.column() == 1:
@@ -721,6 +732,8 @@ class QJsonModel(QAbstractItemModel):
             return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
         elif index.column() == 5:
             return Qt.ItemFlag.ItemIsEnabled
+        elif index.column() == 6:
+            return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
         return super().flags(index)
 
     def data(self, index: QModelIndex, role: int = ...):
@@ -759,6 +772,8 @@ class QJsonModel(QAbstractItemModel):
                     return item.note()
                 else:
                     return ""
+            elif col == 6:
+                return item.customNote()
         return QVariant()
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
@@ -807,7 +822,7 @@ class QJsonModel(QAbstractItemModel):
         return parentItem.childCount()
 
     def columnCount(self, parent: QModelIndex = ...):
-        return 6
+        return 7
 
     def to_json(self, item=None):
         if item is None:
