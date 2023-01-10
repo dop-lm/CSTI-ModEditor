@@ -62,6 +62,11 @@ class ModifyItemGUI(QWidget, Ui_Item):
 
             menu = QMenu(self.treeView)
             if item.parent() is not None:
+                if item.type() == "list" or item.type() == "dict":
+                    pExpandAct = QAction("展开全部", menu)
+                    pExpandAct.triggered.connect(self.on_actExpandAll)
+                    menu.addAction(pExpandAct)
+
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
                         if item.type() == "list": 
@@ -82,26 +87,110 @@ class ModifyItemGUI(QWidget, Ui_Item):
                 elif item.key().endswith("WarpType") or item.key().endswith("WarpData"):
                     pass
                 else:
-                    if item.type() == "list":
-                        if item.key().endswith("WarpData"): 
-                            pass
-                        else:
+                    if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
+                        if item.parent().type() == "list":
+                            pDeleteAct = QAction("删除", menu)
+                            pDeleteAct.triggered.connect(self.on_delListItem)
+                            menu.addAction(pDeleteAct)
+
+                        if item.type() == "list":
                             pNewAct = QAction("新建空白项", menu)
+                            pNewAct.triggered.connect(self.on_newListItem)
+                            menu.addAction(pNewAct)
+
+                            pNewAct = QAction("载入收藏", menu)
+                            pNewAct.triggered.connect(self.on_loadListItem)
+                            menu.addAction(pNewAct)
+                        
+                        if item.type() == "dict":              
+                            pCopyCollAct = QAction("复制收藏并覆盖", menu)
+                            pCopyCollAct.triggered.connect(self.on_copyCollItem)
+                            menu.addAction(pCopyCollAct)
+                    else:
+                        if item.type() == "list":
+                            pNewAct = QAction("引用新建空白项", menu)
                             pNewAct.triggered.connect(self.on_addEmptyItem)
                             menu.addAction(pNewAct)
-                            pLoadAct = QAction("载入收藏", menu)
+                            pLoadAct = QAction("引用载入收藏", menu)
                             pLoadAct.triggered.connect(self.on_loadCollItem)
                             menu.addAction(pLoadAct)
-                    if item.parent().type() == "list" and item.parent().key().endswith("WarpData") and item.depth() > 1:
-                        pDeleteAct = QAction("删除", menu)
-                        pDeleteAct.triggered.connect(self.on_delListItem)
-                        menu.addAction(pDeleteAct)
+                    
                     if item.type() == "dict":              
                         pSaveAct = QAction("收藏", menu)
                         pSaveAct.triggered.connect(self.on_saveItem)
                         menu.addAction(pSaveAct)
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
+
+    def on_actExpandAll(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            self.treeView.expandRecursively(index)
+
+    def on_copyCollItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
+                QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+                return
+            self.loadCollection = CollectionGUI(item.field(), self)
+            self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+            self.loadCollection.exec_()
+            
+            name = self.loadCollection.lineEdit.text()
+            if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
+                self.model.deleteItem(srcIndex)
+                self.model.addJsonItem(srcIndex.parent(), DataBase.AllCollection[item.field()][name], item.field(), item.key())
+                return
+
+    def on_newListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json"):
+            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json", 'r') as f:
+                data = json.load(f)
+            
+            child_key = 0
+            while str(child_key) in item.mChilds:
+                child_key += 1
+            self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
+            return
+
+    def on_loadListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
+            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            return
+        self.loadCollection = CollectionGUI(item.field(), self)
+        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+        self.loadCollection.exec_()
+        
+        name = self.loadCollection.lineEdit.text()
+        
+        if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
+            child_key = 0
+            while str(child_key) in item.mChilds:
+                child_key += 1
+            self.model.addJsonItem(srcIndex, DataBase.AllCollection[item.field()][name], item.field(), str(child_key))
+            return
 
     def on_loadCollItem(self) -> None:
         index = self.treeView.currentIndex()
@@ -115,6 +204,7 @@ class ModifyItemGUI(QWidget, Ui_Item):
             QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
             return
         self.loadCollection = CollectionGUI(item.field(), self)
+        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
         self.loadCollection.exec_()
         
         name = self.loadCollection.lineEdit.text()

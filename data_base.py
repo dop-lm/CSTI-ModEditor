@@ -40,6 +40,9 @@ class DataBase(object):
     def loadDataBase(data_dir):
         DataBase.DataDir = data_dir
 
+        if not os.path.exists(DataBase.DataDir + "/Mods"):
+            os.mkdir(DataBase.DataDir + "/Mods")
+
         # Load Name
         DataBase.loadName()
 
@@ -252,15 +255,35 @@ class DataBase(object):
                         DataBase.loopLoadModSimpCn(sub_item, mod_name)
                 if type(item) == dict:
                     DataBase.loopLoadModSimpCn(item, mod_name)
+
+    def loadModSimpCn(mod_dir):
+        for dir in os.listdir(mod_dir):
+            if os.path.isdir(mod_dir + r"/" + dir):
+                if dir == "Localization":
+                    if os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
+                        with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
+                            lines = f.readlines(-1)
+                            for line in lines:
+                                keys = line.split(',')
+                                if len(keys) > 3:
+                                    if line.find('"') != -1:
+                                        new_keys = line.split('"')
+                                        if len(new_keys) == 3 and new_keys[0][-1] == ',' and  new_keys[2][0] == ',':
+                                            DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}  
+                                elif len(keys) == 3:
+                                    DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
+                                else:
+                                    print("Wrong Format Key")
         
     def saveModSimpCn(mod_dir):
+        DataBase.loadModSimpCn(mod_dir)
         with open(mod_dir + r"/Localization/SimpCn.csv", "w", encoding='utf-8') as f:
             for key in DataBase.AllModSimpCn:
                 f.write(key)
                 f.write(',"')
-                f.write(DataBase.AllModSimpCn[key]["original"])
+                f.write(DataBase.AllModSimpCn[key]["original"].replace("\n", "\\n").replace("\t", "\\t"))
                 f.write('",')
-                f.write(DataBase.AllModSimpCn[key]["translate"])
+                f.write(DataBase.AllModSimpCn[key]["translate"].replace("\n", "\\n").replace("\t", "\\t"))
                 f.write('\n')
 
     def loadNote():

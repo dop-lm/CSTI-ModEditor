@@ -119,6 +119,11 @@ class ItemGUI(QWidget, Ui_Item):
                     pDeleteAct = QAction("删除", menu)
                     pDeleteAct.triggered.connect(self.on_delListItem)
                     menu.addAction(pDeleteAct)
+
+                if item.type() == "list" or item.type() == "dict":
+                    pExpandAct = QAction("展开全部", menu)
+                    pExpandAct.triggered.connect(self.on_actExpandAll)
+                    menu.addAction(pExpandAct)
                 
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.type() == "list": 
@@ -161,6 +166,12 @@ class ItemGUI(QWidget, Ui_Item):
 
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
+
+    def on_actExpandAll(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            self.treeView.expandRecursively(index)
+
 
     def on_delListItem(self) -> None:
         index = self.treeView.currentIndex()
@@ -224,6 +235,7 @@ class ItemGUI(QWidget, Ui_Item):
             QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
             return
         self.loadCollection = CollectionGUI(item.field(), self)
+        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
         self.loadCollection.exec_()
         
         name = self.loadCollection.lineEdit.text()
@@ -297,6 +309,7 @@ class ItemGUI(QWidget, Ui_Item):
                 QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
                 return
             self.loadCollection = CollectionGUI(item.field(), self)
+            self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
             self.loadCollection.exec_()
             
             name = self.loadCollection.lineEdit.text()

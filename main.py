@@ -17,7 +17,7 @@ import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.1.1"
+ModEditorVersion = "0.1.3"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -50,6 +50,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.treeWidget.itemDoubleClicked.connect(self.on_treeWidgetItemDoubleClicked)
         self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeWidget.customContextMenuRequested.connect(self.on_treeWidgetCustomContextMenuRequested)
+        width = QtWidgets.qApp.desktop().availableGeometry(self).width()
+        self.splitter.setSizes([int(width * 1/40), int(width * 39/40)])
+        for i in range(self.splitter.count()):
+            self.splitter.setCollapsible(i, False)
 
         self.action_newMod.triggered.connect(self.on_newMod)
         self.action_loadMod.triggered.connect(self.on_loadMod)
@@ -66,7 +70,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         elif reply == QMessageBox.No:
             event.accept()      
         else:
-            event.ignore() 
+            event.ignore()
 
     def on_treeWidgetCustomContextMenuRequested(self, pos: QPoint) -> None:
         hititem = self.treeWidget.currentItem()
