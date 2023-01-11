@@ -247,9 +247,13 @@ class DataBase(object):
     def loopLoadModSimpCn(json, mod_name):
         if type(json) is dict:
             for key, item in json.items():
-                if key == "LocalizationKey" and type(item) == str and item.startswith(mod_name) and item not in DataBase.AllModSimpCn:
-                    if "DefaultText" in json:
-                        DataBase.AllModSimpCn[item] = {"original": json["DefaultText"], "translate": ""}
+                if key == "LocalizationKey" and type(item) == str and item.startswith(mod_name):
+                    if item not in DataBase.AllModSimpCn:
+                        if "DefaultText" in json:
+                            DataBase.AllModSimpCn[item] = {"original": json["DefaultText"], "translate": ""}
+                    else:
+                        if "DefaultText" in json:
+                            DataBase.AllModSimpCn[item]["original"] = json["DefaultText"]
                 if type(item) == list:
                     for sub_item in item:
                         DataBase.loopLoadModSimpCn(sub_item, mod_name)
@@ -269,9 +273,15 @@ class DataBase(object):
                                     if line.find('"') != -1:
                                         new_keys = line.split('"')
                                         if len(new_keys) == 3 and new_keys[0][-1] == ',' and  new_keys[2][0] == ',':
-                                            DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}  
+                                            if new_keys[0][:-1] not in DataBase.AllModSimpCn:
+                                                DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}
+                                            else:
+                                                DataBase.AllModSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n","")
                                 elif len(keys) == 3:
-                                    DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
+                                    if keys[0] not in DataBase.AllModSimpCn:
+                                        DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
+                                    else:
+                                        DataBase.AllModSimpCn[keys[0]]["translate"] = keys[2].replace("\n","")
                                 else:
                                     print("Wrong Format Key")
         

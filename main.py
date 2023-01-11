@@ -17,7 +17,7 @@ import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.1.3"
+ModEditorVersion = "0.1.4"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
