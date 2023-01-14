@@ -37,8 +37,11 @@ class ItemGUI(QWidget, Ui_Item):
             subTabButton = QPushButton("添加蓝图次分组", self)
             subTabButton.clicked.connect(self.on_tabButtonCardDataSubTabGroup)
             self.horizontalLayout.insertWidget(3, subTabButton)
-            label = QLabel("不是蓝图的卡别添加")
+            label = QLabel("<-不是蓝图的卡别添加")
             self.horizontalLayout.insertWidget(4, label)
+            subGpTabButton = QPushButton("添加所属类型组", self)
+            subGpTabButton.clicked.connect(self.on_tabButtonCardDataGpTabGroup)
+            self.horizontalLayout.insertWidget(5, subGpTabButton)
         if self.field == "CharacterPerk":
             tabButton = QPushButton("添加特性互斥组", self)
             self.horizontalLayout.insertWidget(2, tabButton)
@@ -57,7 +60,7 @@ class ItemGUI(QWidget, Ui_Item):
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
-            self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabGroup", str, select.lineEdit.text(), "Special", True)
+            self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabGroup", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
     def on_tabButtonCardDataSubTabGroup(self):
@@ -65,7 +68,7 @@ class ItemGUI(QWidget, Ui_Item):
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
-            self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabSubGroup", str, select.lineEdit.text(), "Special", True)
+            self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabSubGroup", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
     def on_tabButtonCharacterPerk(self):
@@ -73,7 +76,24 @@ class ItemGUI(QWidget, Ui_Item):
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
-            self.model.addItem(QModelIndex(), "CharacterPerkPerkGroup", str, select.lineEdit.text(), "Special", True)
+            self.model.addItem(QModelIndex(), "CharacterPerkPerkGroup", str, select.lineEdit.text(), "SpecialWarp", True)
+            return
+
+    def on_tabButtonCardDataGpTabGroup(self):
+        select = SelectGUI(self.treeView, field_name = "ItemCardDataCardTabGpGroup", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            if "ItemCardDataCardTabGpGroup" in self.model.mRootItem.mChilds:
+                itemIndex = self.model.index(self.model.mRootItem.childRow("ItemCardDataCardTabGpGroup"), 0, QModelIndex())
+                child_key = 0
+                while str(child_key) in itemIndex.internalPointer().mChilds:
+                    child_key += 1
+                self.model.addItem(itemIndex, str(child_key), str, select.lineEdit.text(), "SpecialWarp", True)
+            else:
+                self.model.addItem(QModelIndex(), "ItemCardDataCardTabGpGroup", list, "", "SpecialWarp", True)
+                itemIndex = self.model.index(self.model.mRootItem.childRow("ItemCardDataCardTabGpGroup"), 0, QModelIndex())
+                self.model.addItem(itemIndex, "0", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
     def on_tabButtonGameStat(self):
@@ -81,7 +101,7 @@ class ItemGUI(QWidget, Ui_Item):
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
-            self.model.addItem(QModelIndex(), "VisibleGameStatStatListTab", str, select.lineEdit.text(), "Special", True)
+            self.model.addItem(QModelIndex(), "VisibleGameStatStatListTab", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
     def loadJsonData(self, json_data):
@@ -115,6 +135,11 @@ class ItemGUI(QWidget, Ui_Item):
 
             menu = QMenu(self.treeView)
             if item.parent() is not None:
+                if item.field() == "SpecialWarp" and item.depth() == 1:
+                    pDeleteAct = QAction("删除", menu)
+                    pDeleteAct.triggered.connect(self.on_delItem)
+                    menu.addAction(pDeleteAct)
+
                 if item.parent().type() == "list" and item.depth() > 1:
                     pDeleteAct = QAction("删除", menu)
                     pDeleteAct.triggered.connect(self.on_delListItem)
@@ -133,7 +158,7 @@ class ItemGUI(QWidget, Ui_Item):
                     pRefAct.triggered.connect(self.on_addRefItem)
                     menu.addAction(pRefAct)
                 elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
-                    item.field() == "Special" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
+                    item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
                     pass
                 else:
                     if item.depth() == 1:
@@ -172,6 +197,15 @@ class ItemGUI(QWidget, Ui_Item):
         if index.isValid():
             self.treeView.expandRecursively(index)
 
+    def on_delItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+            self.model.deleteItem(srcIndex)
 
     def on_delListItem(self) -> None:
         index = self.treeView.currentIndex()

@@ -87,7 +87,13 @@ class QJsonTreeItem(object):
         self.mKey = key
 
     def setValue(self, value:str):
-       self.mValue = value
+        if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
+            if value == "True":
+                self.mValue = True
+            else:
+                self.mValue = False
+        else:
+            self.mValue = value
 
     def setField(self, value:str):
        self.mField = value

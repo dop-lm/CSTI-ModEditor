@@ -17,7 +17,7 @@ import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.1.4"
+ModEditorVersion = "0.2.1"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -47,6 +47,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.treeWidget.setColumnCount(1)
         self.treeWidget.setColumnWidth(0,50)
         self.treeWidget.setHeaderLabels(["文件列表"])
+        self.treeWidget.setSortingEnabled(True)
+        self.treeWidget.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder)
+        # self.treeWidget.setDragEnabled(True)
+        # self.treeWidget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        # self.treeWidget.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.treeWidget.itemDoubleClicked.connect(self.on_treeWidgetItemDoubleClicked)
         self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeWidget.customContextMenuRequested.connect(self.on_treeWidgetCustomContextMenuRequested)
@@ -62,8 +67,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.tabCloseRequested.connect(self.on_tabWidgetTabCloseRequested)
 
-        self.srcTitle = self.windowTitle() + ModEditorVersion
+        self.srcTitle = self.windowTitle() + " " + ModEditorVersion
         self.setWindowTitle(self.srcTitle)
+
+        self.shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.shortcut.activated.connect(self.on_saveMod)
 
     def closeEvent(self, event) -> None:
         reply = QMessageBox.question(self, '保存', '是否在退出前保存(收藏、子菜单、本地化)', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
@@ -78,24 +86,68 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def on_treeWidgetCustomContextMenuRequested(self, pos: QPoint) -> None:
         hititem = self.treeWidget.currentItem()
         if hititem:
-            root = hititem.parent()
+            depth = self.treeItemDepth(hititem)
             pmenu = QMenu(self)
-            if root is None:
+            if depth == 0:
                 if hititem.text(0) == "GameSourceModify":
                     pAddAct = QAction("新建修改", pmenu)
                     pAddAct.triggered.connect(self.on_newModify)
                     pmenu.addAction(pAddAct)
+                elif hititem.text(0) == "ScriptableObject":
+                    pass
                 else:
                     pAddAct = QAction("新建", pmenu)
                     pAddAct.triggered.connect(self.on_newCard)
                     pmenu.addAction(pAddAct)
-            else:
-                tab_key = root.text(0) + ":" + hititem.text(0)
-                if not tab_key in self.tab_item_dict:
-                    pDeleteAct = QAction("删除", pmenu)
-                    pDeleteAct.triggered.connect(self.on_delCard)
-                    pmenu.addAction(pDeleteAct)
-            pmenu.popup(self.sender().mapToGlobal(pos))
+            elif depth == 1:
+                if hititem.parent().text(0) == "ScriptableObject":
+                    pAddAct = QAction("新建", pmenu)
+                    pAddAct.triggered.connect(self.on_newScriptableObject)
+                    pmenu.addAction(pAddAct)
+                else:
+                    tab_key = hititem.parent().text(0) + ":" + hititem.text(0)
+                    if not tab_key in self.tab_item_dict:
+                        pDeleteAct = QAction("删除", pmenu)
+                        pDeleteAct.triggered.connect(self.on_delCard)
+                        pmenu.addAction(pDeleteAct)
+            elif depth == 2:
+                if hititem.parent().parent().text(0) == "ScriptableObject":
+                    tab_key = hititem.parent().text(0) + ":" + hititem.text(0)
+                    if not tab_key in self.tab_item_dict:
+                        pDeleteAct = QAction("删除", pmenu)
+                        pDeleteAct.triggered.connect(self.on_delCard)
+                        pmenu.addAction(pDeleteAct)
+            if len(pmenu.actions()):
+                pmenu.popup(self.sender().mapToGlobal(pos))
+
+    def on_newScriptableObject(self) -> None:
+        hititem = self.treeWidget.currentItem()
+        if hititem:
+            root = hititem.parent()
+            if root.text(0) == "ScriptableObject":
+                group_name = hititem.text(0)
+                select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewData)
+                select.exec_()
+                template_key = select.lineEdit.text()
+                try:
+                    card_name = select.name_editor.text()
+                    print(card_name, template_key)
+                    if card_name and template_key:
+                        if not card_name in self.tree_item_dict["ScriptableObject"][group_name]:
+                            child = QTreeWidgetItem()
+                            child.setText(0, card_name)
+                            child_path = self.mod_path + "/ScriptableObject/" + group_name + "/" + card_name + ".json"
+                            with open(DataBase.AllPath[group_name][template_key], "r") as f:
+                                temp_data = f.read(-1)
+                            temp_json = json.loads(temp_data)
+                            with open(child_path, "w") as f:
+                                f.write(temp_data)
+                            self.group_dict["ScriptableObject"][group_name].addChild(child)
+                            self.tree_item_dict["ScriptableObject"][group_name][card_name] = {"path": child_path}
+                        else:
+                            QMessageBox.warning(self, '警告','存在同名文件')
+                except Exception as ex:
+                    print(traceback.format_exc())
 
     def on_newCard(self) -> None:
         hititem = self.treeWidget.currentItem()
@@ -144,14 +196,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                             child = QTreeWidgetItem()
                             child.setText(0, card_name)
                             os.mkdir(self.mod_path + "/" + group_name + "/" + card_name)
-
+                            
                             target_group_name = ""
                             target_guid = DataBase.AllGuidPlain[target_key]
                             for type_key in DataBase.AllRef["CardData"].keys():
                                 if target_key in DataBase.AllRef["CardData"][type_key]:
                                     target_group_name = "CardData"
                                     break
-                            
                             for group_key in DataBase.AllGuid.keys():
                                 if target_key in DataBase.AllGuid[group_key]:
                                     target_group_name = group_key
@@ -172,20 +223,38 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     def on_delCard(self) -> None:
         hititem = self.treeWidget.currentItem()
-        root = hititem.parent()
-        if root is None:
-            pass
-        else:
-            reply = QMessageBox.question(self,'警告','确定要删除' + root.text(0) + ":" + hititem.text(0) + '吗', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                index = root.indexOfChild(hititem)
-                root.takeChild(index)
-                if "dir" in self.tree_item_dict[root.text(0)][hititem.text(0)]:
-                    shutil.rmtree(self.tree_item_dict[root.text(0)][hititem.text(0)]["dir"])
-                else:
-                    os.remove(self.tree_item_dict[root.text(0)][hititem.text(0)]["path"])
-                del self.tree_item_dict[root.text(0)][hititem.text(0)]
-                del hititem
+        if hititem:
+            depth = self.treeItemDepth(hititem)
+            if depth == 0:
+                pass
+            elif depth == 1:
+                father = hititem.parent()
+                reply = QMessageBox.question(self,'警告','确定要删除' + father.text(0) + ":" + hititem.text(0) + '吗', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    index = father.indexOfChild(hititem)
+                    father.takeChild(index)
+                    if "dir" in self.tree_item_dict[father.text(0)][hititem.text(0)]:
+                        shutil.rmtree(self.tree_item_dict[father.text(0)][hititem.text(0)]["dir"])
+                    else:
+                        os.remove(self.tree_item_dict[father.text(0)][hititem.text(0)]["path"])
+                    del self.tree_item_dict[father.text(0)][hititem.text(0)]
+                    del hititem
+            elif depth == 2:
+                father = hititem.parent()
+                grand_father = father.parent()
+                reply = QMessageBox.question(self,'警告','确定要删除' + father.text(0) + ":" + hititem.text(0) + '吗', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    index = father.indexOfChild(hititem)
+                    father.takeChild(index)
+                    if "dir" in self.tree_item_dict[grand_father.text(0)][father.text(0)][hititem.text(0)]:
+                        shutil.rmtree(self.tree_item_dict[grand_father.text(0)][father.text(0)][hititem.text(0)]["dir"])
+                    else:
+                        os.remove(self.tree_item_dict[grand_father.text(0)][father.text(0)][hititem.text(0)]["path"])
+                    del self.tree_item_dict[grand_father.text(0)][father.text(0)][hititem.text(0)]
+                    del hititem
+            else:
+                pass
+                
 
     def saveTabJsonItem(self, index: int):
         if self.tabWidget.tabText(index).startswith("GameSourceModify"):
@@ -211,13 +280,20 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 return
         except Exception as ex:
             print(traceback.format_exc())
+            
+    def treeItemDepth(self, treeItem: QTreeWidgetItem):
+        depth = 0 
+        while(treeItem.parent() is not None):
+            depth += 1
+            treeItem = treeItem.parent()
+        return depth
 
     def on_treeWidgetItemDoubleClicked(self, treeItem: QTreeWidgetItem, column: int):
         if treeItem:
-            root = treeItem.parent()
-            if root is None:
+            depth = self.treeItemDepth(treeItem)
+            if depth == 0:
                 return
-            else:
+            elif depth == 1:
                 tab_key = treeItem.parent().text(0) + ":" + treeItem.text(0)
                 if tab_key in self.tab_item_dict:
                     pass
@@ -235,16 +311,32 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                             template_json = json.load(f)
                             self.loopDelGameSourceModifyTemplateWarpper(template_json)
                         src_json.update(template_json)
-
                         item.loadJsonData(json.dumps(src_json).encode("utf-8"))
-                    else:
-                        item = ItemGUI.ItemGUI(root.text(0), self.tabWidget)
+                    elif treeItem.parent().text(0) in DataBase.RefGuidList:
+                        item = ItemGUI.ItemGUI(treeItem.parent().text(0), self.tabWidget)
                         file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
                         with open(file_path, 'rb') as f:
                             item.loadJsonData(f.read(-1))
+                    else:
+                        return
                     self.tabWidget.addTab(item, tab_key)
                     self.tab_item_dict[tab_key] = {"name": treeItem.text(0), "path":  file_path, "widget": item}
                 self.tabWidget.setCurrentWidget(self.tab_item_dict[tab_key]["widget"])
+            elif depth == 2:
+                if treeItem.parent().parent().text(0) == "ScriptableObject":
+                    tab_key = treeItem.parent().text(0) + ":" + treeItem.text(0)
+                    if tab_key in self.tab_item_dict:
+                        pass
+                    else:
+                        item = ItemGUI.ItemGUI(treeItem.parent().text(0), self.tabWidget)
+                        file_path = self.tree_item_dict[treeItem.parent().parent().text(0)][treeItem.parent().text(0)][treeItem.text(0)]["path"]
+                        with open(file_path, 'rb') as f:
+                            item.loadJsonData(f.read(-1))
+                        self.tabWidget.addTab(item, tab_key)
+                        self.tab_item_dict[tab_key] = {"name": treeItem.text(0), "path":  file_path, "widget": item}
+                    self.tabWidget.setCurrentWidget(self.tab_item_dict[tab_key]["widget"])
+            else:
+                pass
 
     def loopDelGameSourceModifyTemplateWarpper(self, json):
         for key in list(json.keys()):
@@ -334,7 +426,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                     child = QTreeWidgetItem()
                                     child.setText(0, sub_dir)
                                     group.addChild(child)
-
                                     template_reftrans = DataBase.AllGuidPlainRev[file[:-5]]
                                     for type_key in DataBase.AllRef["CardData"].keys():
                                         if template_reftrans in DataBase.AllRef["CardData"][type_key]:
@@ -348,6 +439,24 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                         "dir": self.mod_path + "/" + item  + "/" + sub_dir, \
                                             "template_field": target_group_name}
                                     break
+                    group.setExpanded(True)
+                    self.group_dict[item] = group
+                elif item == "ScriptableObject":
+                    self.group_dict[item] = {}
+                    for sub_dir in os.listdir(self.mod_path + "/" + item):
+                        child = QTreeWidgetItem()
+                        child.setText(0, sub_dir)
+                        group.addChild(child)
+                        self.tree_item_dict[item][sub_dir] = {}
+                        for file in os.listdir(self.mod_path + "/" + item + "/" + sub_dir):
+                            if file.endswith(".json"):
+                                cchild = QTreeWidgetItem()
+                                cchild.setText(0, file[:-5])
+                                child.addChild(cchild)
+                                child.setExpanded(True)
+                                self.tree_item_dict[item][sub_dir][file[:-5]] = {"path": self.mod_path + "/" + item  + "/" + sub_dir + "/" + file}
+                        self.group_dict[item][sub_dir] = child
+                    group.setExpanded(True)
                 else:
                     for sub_item in os.listdir(self.mod_path + "/" + item):
                         if sub_item.endswith(".json"):
@@ -355,8 +464,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                             child.setText(0, sub_item[:-5])
                             group.addChild(child)
                             self.tree_item_dict[item][sub_item[:-5]] = {"path": self.mod_path + "/" + item  + "/" + sub_item}
-                group.setExpanded(True)
-                self.group_dict[item] = group
+                    group.setExpanded(True)
+                    self.group_dict[item] = group
         self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"]))
 
 if __name__ == '__main__':
