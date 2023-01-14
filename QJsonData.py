@@ -11,8 +11,9 @@ from PyQt5.QtWidgets import *
 
 pattern_number = ''': [1-9]'''
 pattern_decimal = ''': 0.0*[1-9]{1,}.*?,'''
-pattern_true = ''':true'''
+pattern_true = ''': true'''
 pattern_no_empty_string = ''':""[^""]"'''
+pattern_negative = ''': -'''
 
 class QJsonTreeItem(object):
     def __init__(self, parent=None):
@@ -183,23 +184,27 @@ class QJsonTreeItem(object):
 
             # process the key/value pairs
             if re.search(pattern_number, str(value)):
-                if rootItem.parent is not None:
+                if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
             elif re.search(pattern_decimal, str(value)):
-                if rootItem.parent is not None:
+                if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
             elif re.search(pattern_true, str(value)):
-                if rootItem.parent is not None:
+                if rootItem.parent() is not None:
+                    rootItem.parent().setVaild(True)
+                rootItem.setVaild(True)
+            elif re.search(pattern_negative, str(value)):
+                if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
             elif re.search(pattern_no_empty_string, str(value)):
-                if rootItem.parent is not None:
+                if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
             else:
-                rootItem.setVaild(False)
+                pass
 
             for key in value:
                 v = value[key]
@@ -260,6 +265,10 @@ class QJsonTreeItem(object):
                 if key.endswith("WarpType"):
                     if key[:-8] in rootItem.mChilds:
                         rootItem.mChilds[key[:-8]].setVaild(True)
+
+        if rootItem.mVaild:
+            if rootItem.parent() is not None:
+                rootItem.parent().setVaild(True)
 
         # if rootItem.mChilds:
         #     rootItem.mChilds = {k: v for k, v in sorted(rootItem.mChilds.items(), key=lambda item: item[1].mVaild, reverse=True)}
