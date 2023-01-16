@@ -127,8 +127,11 @@ class SelectGUI(QDialog, Ui_Select):
             elif self.field_name == "VisibleGameStatStatListTab":
                 self.comboBox.addItems(DataBase.AllRef["StatListTab"])
                 self.m_completer = QCompleter(DataBase.AllRef["StatListTab"], self)
+            elif self.field_name == "PlayerCharacterJournalName":
+                self.comboBox.addItems(DataBase.AllRef["ContentDisplayer"])
+                self.m_completer = QCompleter(DataBase.AllRef["ContentDisplayer"], self)
             else:
-                pass
+                self.m_completer = QCompleter([], self)
             
             self.m_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.m_completer.setFilterMode(Qt.MatchFlag.MatchContains)

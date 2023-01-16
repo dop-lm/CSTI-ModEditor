@@ -4,16 +4,26 @@ import sys
 import os
 import copy
 
+def delete_keys_from_dict(src_dict, key: str):
+    for field in list(src_dict.keys()):
+        if field == key:
+            del src_dict[field]
+        elif type(src_dict[field]) == dict:
+            delete_keys_from_dict(src_dict[field], key)
+
 class DataBase(object):
     DataDir = None
-    RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
-    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction"]
-    SupportList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction", "ScriptableObject"]
+    RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
+    # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
+    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter"]
+    SupportList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction", "ScriptableObject", "PlayerCharacter"]
 
     AllSpecialTypeField = {}
     AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup", "ItemCardDataCardTabGpGroup"]
     AllSpecialTypeField["CharacterPerk"] = ["CharacterPerkPerkGroup"]
     AllSpecialTypeField["GameStat"] = ["VisibleGameStatStatListTab"]
+    AllSpecialTypeField["CardTabGroup"] = ["BlueprintCardDataCardTabGroup"]
+    AllSpecialTypeField["PlayerCharacter"] = ["PlayerCharacterJournalName"]
 
     AllBlueprintTab = []
     AllBlueprintSubTab = []
@@ -85,6 +95,7 @@ class DataBase(object):
         DataBase.AllScriptableObject.update(copy.deepcopy(DataBase.AllScriptableObjectBase))
 
         DataBase.AllRef["CardData"]["Mod"] = []
+        DataBase.AllRef["ContentDisplayer"] = []
         
         DataBase.AllModSimpCn = {}
 
@@ -114,8 +125,15 @@ class DataBase(object):
                 elif dir == "ScriptableObject":
                     for sub_dir in os.listdir(mod_dir + r"/" + dir):
                         for file in os.listdir(mod_dir + r"/" + dir + r"/" + sub_dir):
+                            if sub_dir == "ContentPage":
+                                if file.endswith("Default.json"):
+                                    name_parts = file.split("_")
+                                    if len(name_parts) > 2:
+                                        DataBase.AllRef["ContentDisplayer"].append(name_parts[0] + "_" + name_parts[1])
                             if file.endswith(".json"):
-                                 DataBase.AllRef[sub_dir].append(file[:-5])
+                                ref = file[:-5]
+                                DataBase.AllRef[sub_dir].append(file[:-5])
+                                DataBase.AllPath[sub_dir].update({ref : mod_dir + r"/" + dir + r"/"  + sub_dir + R"/" + file})
                 elif dir == "Localization":
                     if os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
                         with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
@@ -151,6 +169,10 @@ class DataBase(object):
     def loadName():
         DataBase.AllRefBase = {}
         DataBase.AllScriptableObjectBase = {}
+
+        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/"):
+            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/" + dir):
+                DataBase.RefNameList.append(dir)
 
         for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/"):
             if file.endswith(".txt"):
@@ -197,6 +219,30 @@ class DataBase(object):
                     DataBase.AllRefBase["CardData"][file[:-5]] = list(temp.keys())
                     DataBase.AllGuidPlainBase.update(temp)
                     DataBase.AllScriptableObjectBase.update(temp)
+
+        try:
+            for mod_ref_dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/"):
+                if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir):
+                    for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
+                        if file.endswith(".json"):
+                            with open(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
+                                temp = json.loads(f.read(-1))
+                                DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
+                                DataBase.AllGuidBase[file[:-5]].update(temp)
+                                DataBase.AllGuidPlainBase.update(temp)
+                                DataBase.AllScriptableObjectBase.update(temp)
+
+                    for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
+                        if file.endswith(".json"):
+                            with open(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file, encoding='utf-8') as f:
+                                temp = json.loads(f.read(-1))
+                                DataBase.AllCardDataBase.update(temp)
+                                DataBase.AllGuidBase["CardData"][file[:-5]].update(temp)
+                                DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
+                                DataBase.AllGuidPlainBase.update(temp)
+                                DataBase.AllScriptableObjectBase.update(temp)
+        except Exception as ex:
+            print(ex)
 
         # print(DataBase.AllGuidPlainBase.keys())
 
@@ -258,7 +304,19 @@ class DataBase(object):
             with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "r", encoding='utf-8') as f:
                 DataBase.AllCollection = json.load(f)
 
+        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
+            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
+                for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
+                    if file.endswith(".json"):
+                        if  file[:-5] not in DataBase.AllCollection:
+                            DataBase.AllCollection[file[:-5]] = {}
+                        with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir + r"/" + file, "r", encoding='utf-8') as f:
+                            DataBase.AllCollection[file[:-5]]["默认空白项"] = json.load(f)
+                            
+
     def saveCollection():
+        temp_dict = copy.deepcopy(DataBase.AllCollection)
+        delete_keys_from_dict(temp_dict, "默认空白项")
         with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllCollection, f)
 

@@ -17,7 +17,7 @@ import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.2.1"
+ModEditorVersion = "0.3.0"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -183,7 +183,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 template_key = select.lineEdit.text()
                 try:
                     card_name = select.name_editor.text()
-                    print(card_name, template_key)
+                    # print(card_name, template_key)
                     if card_name and template_key:
                         if not card_name in self.tree_item_dict["ScriptableObject"][group_name]:
                             child = QTreeWidgetItem()

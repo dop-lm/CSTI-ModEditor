@@ -50,10 +50,26 @@ class ItemGUI(QWidget, Ui_Item):
             tabButton = QPushButton("添加可显示状态分组", self)
             self.horizontalLayout.insertWidget(2, tabButton)
             tabButton.clicked.connect(self.on_tabButtonGameStat)
+        if self.field == "CardTabGroup":
+            tabButton = QPushButton("添加蓝图主分组", self)
+            tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
+            self.horizontalLayout.insertWidget(2, tabButton)
+        if self.field == "PlayerCharacter":
+            tabButton = QPushButton("添加角色任务", self)
+            tabButton.clicked.connect(self.on_tabButtonPlayerCharacterJournalName)
+            self.horizontalLayout.insertWidget(2, tabButton)
 
         # self.test_button = QPushButton("Test")
         # self.horizontalLayout.addWidget(self.test_button)
         # self.test_button.clicked.connect(self.on_test)
+
+    def on_tabButtonPlayerCharacterJournalName(self):
+        select = SelectGUI(self.treeView, field_name = "PlayerCharacterJournalName", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            self.model.addItem(QModelIndex(), "PlayerCharacterJournalName", str, select.lineEdit.text(), "SpecialWarp", True)
+            return
 
     def on_tabButtonCardDataMainTabGroup(self):
         select = SelectGUI(self.treeView, field_name = "BlueprintCardDataCardTabGroup", type = SelectGUI.Special)
@@ -153,6 +169,10 @@ class ItemGUI(QWidget, Ui_Item):
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.type() == "list": 
                         pRefAct = QAction("追加引用", menu)
+                        if item.key() == "InventorySlots":
+                            pEmptyRefAct = QAction("追加容器槽", menu)
+                            pEmptyRefAct.triggered.connect(self.on_addEmptyRefItem)
+                            menu.addAction(pEmptyRefAct)
                     else:
                         pRefAct = QAction("引用", menu)
                     pRefAct.triggered.connect(self.on_addRefItem)
@@ -379,6 +399,21 @@ class ItemGUI(QWidget, Ui_Item):
                 elif item.field() == "ScriptableObject":
                     self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
                     return
+
+    def on_addEmptyRefItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            child_key = 0
+            while str(child_key) in item.mChilds:
+                child_key += 1
+            srcModel.addJsonItem(srcIndex, {"m_FileID": "", "m_PathID": ""}, None, str(child_key))
+            
 
     # def on_test(self):
     #     index = self.treeView.currentIndex()
