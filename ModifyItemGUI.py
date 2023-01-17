@@ -12,7 +12,7 @@ from data_base import *
 import queue
 
 class ModifyItemGUI(QWidget, Ui_Item):
-    def __init__(self, field, parent = None):
+    def __init__(self, field, auto_resize = True, parent = None):
         super(ModifyItemGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
@@ -22,6 +22,8 @@ class ModifyItemGUI(QWidget, Ui_Item):
         self.treeView.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder)
         self.treeView.header().setSortIndicator(4, Qt.SortOrder.DescendingOrder)
         self.treeView.setDragEnabled(True)
+        if auto_resize:
+            self.treeView.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)

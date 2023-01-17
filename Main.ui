@@ -20,7 +20,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -49,8 +49,6 @@
          </widget>
         </item>
        </layout>
-       <zorder>treeWidget</zorder>
-       <zorder>horizontalLayoutWidget</zorder>
       </widget>
       <widget class="QTabWidget" name="tabWidget"/>
      </widget>
@@ -74,7 +72,14 @@
     <addaction name="action_loadMod"/>
     <addaction name="action_save"/>
    </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>设置</string>
+    </property>
+    <addaction name="action_ResizeMode"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_newMod">
@@ -90,6 +95,11 @@
   <action name="action_save">
    <property name="text">
     <string>保存</string>
+   </property>
+  </action>
+  <action name="action_ResizeMode">
+   <property name="text">
+    <string>关闭自动内容展开</string>
    </property>
   </action>
  </widget>

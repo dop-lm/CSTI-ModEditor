@@ -17,7 +17,7 @@ import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.3.0"
+ModEditorVersion = "0.3.1"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -55,6 +55,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         # self.treeWidget.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.treeWidget.itemDoubleClicked.connect(self.on_treeWidgetItemDoubleClicked)
         self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.treeWidget_autoresize = True
+        self.action_ResizeMode.setText("关闭自动内容展开")
         self.treeWidget.customContextMenuRequested.connect(self.on_treeWidgetCustomContextMenuRequested)
         width = QtWidgets.qApp.desktop().availableGeometry(self).width()
         self.splitter.setSizes([int(width * 1/8), int(width * 7/8)])
@@ -64,9 +66,15 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_newMod.triggered.connect(self.on_newMod)
         self.action_loadMod.triggered.connect(self.on_loadMod)
         self.action_save.triggered.connect(self.on_saveMod)
+        self.action_ResizeMode.triggered.connect(self.on_ChangeCustomContextMenu)
 
         self.tabWidget.setTabsClosable(True)
+        self.tabWidget.setMovable(True)
         self.tabWidget.tabCloseRequested.connect(self.on_tabWidgetTabCloseRequested)
+        self.tabWidget.tabBar().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tabWidget.tabBar().customContextMenuRequested.connect(self.on_tabWidgetCustomContextMenuRequested)
+        # self.tabWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        # self.tabWidget.customContextMenuRequested.connect(self.on_tabWidgetCustomContextMenuRequested)
 
         self.srcTitle = self.windowTitle() + " " + ModEditorVersion
         self.setWindowTitle(self.srcTitle)
@@ -81,6 +89,64 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.quick_close.activated.connect(self.on_quick_close)
 
         self.lineEdit.returnPressed.connect(self.on_lineEditReturnPressed)
+
+    def on_ChangeCustomContextMenu(self):
+        if self.treeWidget_autoresize:
+            self.treeWidget_autoresize = False
+            self.action_ResizeMode.setText("打开自动内容展开")
+        else:
+            self.treeWidget_autoresize = True
+            self.action_ResizeMode.setText("关闭自动内容展开")
+
+    def on_tabWidgetCustomContextMenuRequested(self, pos: QPoint):
+        pmenu = QMenu(self)
+        tabBar = self.tabWidget.tabBar()
+        tab = -1
+        gpos = self.sender().mapToGlobal(pos)
+        posInbar = tabBar.mapFromGlobal(gpos)
+        for i in range(tabBar.count()):
+            if tabBar.tabRect(i).contains(posInbar):
+                tab = i
+                break
+        if tab >= 0:
+            pCloseNowAct = QAction("关闭当前页（自动保存）", pmenu)
+            pCloseNowAct.triggered.connect(lambda: self.on_closeNow(tab))
+            pmenu.addAction(pCloseNowAct)
+
+            pCloseRightAct = QAction("关闭右侧页（自动保存）", pmenu)
+            pCloseRightAct.triggered.connect(lambda: self.on_closeRight(tab))
+            pmenu.addAction(pCloseRightAct)
+
+            pCloseAllExAct = QAction("关闭除此之外所有页（自动保存）", pmenu)
+            pCloseAllExAct.triggered.connect(lambda: self.on_closeAllEx(tab))
+            pmenu.addAction(pCloseAllExAct)
+
+            pCloseAllAct = QAction("关闭所有页（自动保存）", pmenu)
+            pCloseAllAct.triggered.connect(lambda: self.on_closeAll(tab))
+            pmenu.addAction(pCloseAllAct)
+        if len(pmenu.actions()):
+            pmenu.popup(self.sender().mapToGlobal(pos))
+
+    def on_closeNow(self, tab: int):
+        if tab >= 0:
+            self.on_tabWidgetTabCloseRequested(tab, False)
+
+    def on_closeRight(self, tab: int):
+        if tab >= 0:
+            for i in reversed(range(tab + 1, self.tabWidget.count())):
+                self.on_tabWidgetTabCloseRequested(i, False)
+
+    def on_closeAllEx(self, tab: int):
+        if tab >= 0:
+            for i in reversed(range(tab + 1, self.tabWidget.count())):
+                self.on_tabWidgetTabCloseRequested(i, False)
+            for i in reversed(range(self.tabWidget.count() - 1)):
+                self.on_tabWidgetTabCloseRequested(i, False)
+
+    def on_closeAll(self, tab: int):
+        if tab >= 0:
+            for i in reversed(range(self.tabWidget.count())):
+                self.on_tabWidgetTabCloseRequested(i, False)
 
     def on_lineEditReturnPressed(self):
         self.on_pushButtonClicked()
@@ -322,9 +388,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             json.dump(save_data, f, indent = 4)
         DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
     
-    def on_tabWidgetTabCloseRequested(self, index: int):
+    def on_tabWidgetTabCloseRequested(self, index: int, ask: bool = True):
         try:
-            reply = QMessageBox.question(self, '保存', '是否在退出前保存', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            if ask:
+                reply = QMessageBox.question(self, '保存', '是否在退出前保存', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            else:
+                reply = QMessageBox.Yes
             if reply == QMessageBox.Yes:
                 self.saveTabJsonItem(index)
                 del self.tab_item_dict[self.tabWidget.tabText(index)]
@@ -354,7 +423,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 pass
             else:
                 if treeItem.parent().text(0) == "GameSourceModify":
-                    item = ModifyItemGUI.ModifyItemGUI(self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["template_field"], self.tabWidget)
+                    item = ModifyItemGUI.ModifyItemGUI(self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["template_field"], self.treeWidget_autoresize, self.tabWidget)
                     file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
                     template_guid = os.path.basename(file_path)[:-5]
                     template_reftrans = DataBase.AllGuidPlainRev[template_guid]
@@ -368,7 +437,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     src_json.update(template_json)
                     item.loadJsonData(json.dumps(src_json).encode("utf-8"))
                 elif treeItem.parent().text(0) in DataBase.RefGuidList:
-                    item = ItemGUI.ItemGUI(treeItem.parent().text(0), self.tabWidget)
+                    item = ItemGUI.ItemGUI(treeItem.parent().text(0), self.treeWidget_autoresize, self.tabWidget)
                     file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
                     with open(file_path, 'rb') as f:
                         item.loadJsonData(f.read(-1))
@@ -383,7 +452,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 if tab_key in self.tab_item_dict:
                     pass
                 else:
-                    item = ItemGUI.ItemGUI(treeItem.parent().text(0), self.tabWidget)
+                    item = ItemGUI.ItemGUI(treeItem.parent().text(0), self.treeWidget_autoresize, self.tabWidget)
                     file_path = self.tree_item_dict[treeItem.parent().parent().text(0)][treeItem.parent().text(0)][treeItem.text(0)]["path"]
                     with open(file_path, 'rb') as f:
                         item.loadJsonData(f.read(-1))
