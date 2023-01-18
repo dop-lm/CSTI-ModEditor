@@ -84,7 +84,7 @@ class ModifyItemGUI(QWidget, Ui_Item):
                             menu.addAction(pModifyRefAct)
                 elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
                     item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or \
-                        item.field() == "WarpRef" or item.field() == "WarpAdd" or item.field() == "WarpModify":
+                        item.field() == "WarpAdd" or item.field() == "WarpModify":
                     pass
                 elif item.key().endswith("WarpType") or item.key().endswith("WarpData"):
                     pass
