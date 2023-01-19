@@ -620,6 +620,7 @@ class QJsonModel(QAbstractItemModel):
             childItem = QJsonTreeItem.load(json, field, item, key)
             childItem.setVaild(True)
             item.appendChild(key, childItem)
+            item.setVaild(True)
             self.endInsertRows()
             childIndex = self.index(childItem.row(), 0, index)
             self.loopSetWarpField(item, item)
@@ -647,6 +648,7 @@ class QJsonModel(QAbstractItemModel):
             childItem = QJsonTreeItem.newItem(item, key, type, value, field, vaild)
             childItem.setVaild(True)
             item.appendChild(key, childItem)
+            item.setVaild(True)
             self.endInsertRows()
         except Exception as ex:
             print(traceback.format_exc())

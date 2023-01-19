@@ -33,6 +33,39 @@ class ModifyItemGUI(QWidget, Ui_Item):
 
         self.lineEdit.textChanged.connect(self.on_lineEditTextChanged)
 
+        if self.field == "CardData":
+            cardTagButton = QPushButton("添加匹配CardTag", self)
+            cardTagButton.clicked.connect(self.on_cardTagButton)
+            self.horizontalLayout.insertWidget(2, cardTagButton)
+            cardTypeButton = QPushButton("设置匹配CardType", self)
+            cardTypeButton.clicked.connect(self.on_cardTypeButton)
+            self.horizontalLayout.insertWidget(3, cardTypeButton)
+
+    def on_cardTagButton(self) -> None:
+        select = SelectGUI(self.treeView, field_name = "CardTag", type = SelectGUI.Ref)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            if "MatchTagWarpData" in self.model.mRootItem.mChilds:
+                itemIndex = self.model.index(self.model.mRootItem.childRow("MatchTagWarpData"), 0, QModelIndex())
+                child_key = 0
+                while str(child_key) in itemIndex.internalPointer().mChilds:
+                    child_key += 1
+                self.model.addItem(itemIndex, str(child_key), str, select.lineEdit.text(), "SpecialWarp", True)
+            else:
+                self.model.addItem(QModelIndex(), "MatchTagWarpData", list, "", "SpecialWarp", True)
+                itemIndex = self.model.index(self.model.mRootItem.childRow("MatchTagWarpData"), 0, QModelIndex())
+                self.model.addItem(itemIndex, "0", str, select.lineEdit.text(), "SpecialWarp", True)
+            return
+
+    def on_cardTypeButton(self) -> None:
+        select = SelectGUI(self.treeView, field_name = "CardTypes", type = SelectGUI.Ref)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            self.model.addItem(QModelIndex(), "MatchTypeWarpData", str, select.lineEdit.text(), "SpecialWarp", True)
+            return
+
     def on_showInvalidButtonClicked(self) -> None:
         if self.showInvalidButton.text() == "显示未激活属性":
             self.showInvalidButton.setText("隐藏未激活属性")
@@ -83,7 +116,7 @@ class ModifyItemGUI(QWidget, Ui_Item):
                             pModifyRefAct.triggered.connect(self.on_addAddRefItem)
                             menu.addAction(pModifyRefAct)
                 elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
-                    item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or \
+                     item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or \
                         item.field() == "WarpAdd" or item.field() == "WarpModify":
                     pass
                 elif item.key().endswith("WarpType") or item.key().endswith("WarpData"):

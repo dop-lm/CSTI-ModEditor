@@ -19,7 +19,7 @@ class DataBase(object):
     SupportList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction", "ScriptableObject", "PlayerCharacter"]
 
     AllSpecialTypeField = {}
-    AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup", "ItemCardDataCardTabGpGroup"]
+    AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup", "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData"]
     AllSpecialTypeField["CharacterPerk"] = ["CharacterPerkPerkGroup"]
     AllSpecialTypeField["GameStat"] = ["VisibleGameStatStatListTab"]
     AllSpecialTypeField["CardTabGroup"] = ["BlueprintCardDataCardTabGroup"]
