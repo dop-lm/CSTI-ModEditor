@@ -17,7 +17,7 @@ import ModifyItemGUI
 import SelectGUI
 from functools import partial
 
-ModEditorVersion = "0.3.3"
+ModEditorVersion = "0.3.4"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -276,7 +276,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 group_name = hititem.text(0)
                 select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewData)
                 select.exec_()
-                template_key = select.lineEdit.text().split("(")[0]
+                # template_key = select.lineEdit.text().split("(")[0]
+                template_key = select.lineEdit.text()
+                if select.lineEdit.text().rfind("(") >= 0:
+                    template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
                 try:
                     card_name = select.name_editor.text()
                     if card_name and template_key:
@@ -308,7 +311,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewModify)
                 select.exec_()
                 target_key = select.lineEdit.text()
-                template_key = select.lineEdit.text().split("(")[0]
+                # template_key = select.lineEdit.text().split("(")[0]
+                template_key = select.lineEdit.text()
+                if select.lineEdit.text().rfind("(") >= 0:
+                    template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
                 try:
                     card_name = select.name_editor.text()
                     if card_name and template_key:
@@ -427,7 +433,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     file_path = self.tree_item_dict[treeItem.parent().text(0)][treeItem.text(0)]["path"]
                     template_guid = os.path.basename(file_path)[:-5]
                     template_reftrans = DataBase.AllGuidPlainRev[template_guid]
-                    template_ref = template_reftrans.split("(")[0]
+                    # template_ref = template_reftrans.split("(")[0]
+                    template_ref = template_reftrans
+                    if template_reftrans.rfind("(") >= 0:
+                        template_ref = template_reftrans[0:template_reftrans.rfind("(")]
                     template_path = DataBase.AllPathPlain[template_ref]
                     with open(file_path, 'rb') as f:
                         src_json = json.load(f)

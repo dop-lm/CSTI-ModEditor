@@ -224,7 +224,7 @@ class DataBase(object):
             for mod_ref_dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/"):
                 if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir):
                     for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
-                        if file.endswith(".json"):
+                        if file.endswith(".json") and file[:-5] in DataBase.AllRefBase:
                             with open(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
                                 temp = json.loads(f.read(-1))
                                 DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
@@ -233,7 +233,7 @@ class DataBase(object):
                                 DataBase.AllScriptableObjectBase.update(temp)
 
                     for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
-                        if file.endswith(".json"):
+                        if file.endswith(".json") and file[:-5] in DataBase.AllGuidBase["CardData"]:
                             with open(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file, encoding='utf-8') as f:
                                 temp = json.loads(f.read(-1))
                                 DataBase.AllCardDataBase.update(temp)
