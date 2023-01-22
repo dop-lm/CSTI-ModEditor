@@ -71,6 +71,7 @@
     <addaction name="action_newMod"/>
     <addaction name="action_loadMod"/>
     <addaction name="action_save"/>
+    <addaction name="action_ExportZip"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -100,6 +101,11 @@
   <action name="action_ResizeMode">
    <property name="text">
     <string>关闭自动内容展开</string>
+   </property>
+  </action>
+  <action name="action_ExportZip">
+   <property name="text">
+    <string>导出Zip格式</string>
    </property>
   </action>
  </widget>

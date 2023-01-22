@@ -43,6 +43,7 @@ class DataBase(object):
     AllScriptableObject = {}   # DataBase.AllScriptableObject[Ref] -> Guid or Ref
     AllCollection = {}      # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
     AllNotes = {}           # DataBase.AllNotes["CardData"]["CardName"] -> Note
+    AllBaseJsonData = {}    # DataBase.AllBaseJsonData["CardData"]["CardOnCardAction"] -> base json data
 
 
     def __init__(self):
@@ -62,6 +63,9 @@ class DataBase(object):
 
         # Load Path
         DataBase.loadPath()
+
+        # Load Base Json
+        DataBase.loadBaseJson()
 
         # Load UniqueIDScriptable FieldName FieldType
         DataBase.loadUniqueIDScriptableField()
@@ -271,6 +275,15 @@ class DataBase(object):
                     if file.endswith(".json"):
                         DataBase.AllPathBase[dir][file[:-5]] = base_path + dir + r"/" + file
 
+    def loadBaseJson():
+        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
+            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
+                DataBase.AllBaseJsonData[dir] = {}
+                for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
+                    if file.endswith(".json"):
+                        with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir + r"/" + file, "r", encoding='utf-8') as f:
+                            DataBase.AllBaseJsonData[dir][file[:-5]] = json.load(f)
+
     def loadUniqueIDScriptableField():
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData")
         for file in files:
@@ -304,16 +317,12 @@ class DataBase(object):
             with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "r", encoding='utf-8') as f:
                 DataBase.AllCollection = json.load(f)
 
-        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
-            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
-                for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
-                    if file.endswith(".json"):
-                        if  file[:-5] not in DataBase.AllCollection:
-                            DataBase.AllCollection[file[:-5]] = {}
-                        with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir + r"/" + file, "r", encoding='utf-8') as f:
-                            DataBase.AllCollection[file[:-5]]["默认空白项"] = json.load(f)
+        for key in DataBase.AllBaseJsonData.keys():
+            for sub_key in DataBase.AllBaseJsonData[key].keys():
+                if  sub_key not in DataBase.AllCollection:
+                    DataBase.AllCollection[sub_key] = {}
+                DataBase.AllCollection[sub_key]["默认空白项"] = DataBase.AllBaseJsonData[key][sub_key]
                             
-
     def saveCollection():
         temp_dict = copy.deepcopy(DataBase.AllCollection)
         delete_keys_from_dict(temp_dict, "默认空白项")
@@ -338,28 +347,25 @@ class DataBase(object):
 
     def loadModSimpCn(mod_dir):
         for dir in os.listdir(mod_dir):
-            if os.path.isdir(mod_dir + r"/" + dir):
-                if dir == "Localization":
-                    if os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
-                        with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
-                            lines = f.readlines(-1)
-                            for line in lines:
-                                keys = line.split(',')
-                                if len(keys) > 3:
-                                    if line.find('"') != -1:
-                                        new_keys = line.split('"')
-                                        if len(new_keys) == 3 and new_keys[0][-1] == ',' and  new_keys[2][0] == ',':
-                                            if new_keys[0][:-1] not in DataBase.AllModSimpCn:
-                                                DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}
-                                            else:
-                                                DataBase.AllModSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n","")
-                                elif len(keys) == 3:
-                                    if keys[0] not in DataBase.AllModSimpCn:
-                                        DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
-                                    else:
-                                        DataBase.AllModSimpCn[keys[0]]["translate"] = keys[2].replace("\n","")
+            if os.path.isdir(mod_dir + r"/" + dir) and dir == "Localization" and os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
+                with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
+                    lines = f.readlines(-1)
+                    for line in lines:
+                        keys = line.split(',')
+                        if len(keys) > 3 and line.find('"') != -1:
+                            new_keys = line.split('"')
+                            if len(new_keys) == 3 and new_keys[0][-1] == ',' and  new_keys[2][0] == ',':
+                                if new_keys[0][:-1] not in DataBase.AllModSimpCn:
+                                    DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}
                                 else:
-                                    print("Wrong Format Key")
+                                    DataBase.AllModSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n","")
+                        elif len(keys) == 3:
+                            if keys[0] not in DataBase.AllModSimpCn:
+                                DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
+                            else:
+                                DataBase.AllModSimpCn[keys[0]]["translate"] = keys[2].replace("\n","")
+                        else:
+                            print("Wrong Format Key")
         
     def saveModSimpCn(mod_dir):
         DataBase.loadModSimpCn(mod_dir)

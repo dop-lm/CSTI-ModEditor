@@ -63,7 +63,7 @@ class ItemDelegate(QItemDelegate):
             return
         elif item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
             item.setVaild(True)
-            editor.setText(str(index.data()))
+            editor.setText(index.data())
             return
         else:
             pass

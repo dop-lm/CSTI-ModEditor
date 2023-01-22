@@ -269,10 +269,8 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json"):
-            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json", 'r') as f:
-                data = json.load(f)
-            
+        if self.field in DataBase.AllBaseJsonData and item.field() in DataBase.AllBaseJsonData[self.field]:
+            data = DataBase.AllBaseJsonData[self.field][item.field()]            
             child_key = 0
             while str(child_key) in item.mChilds:
                 child_key += 1

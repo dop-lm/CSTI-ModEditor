@@ -15,9 +15,10 @@ import ItemGUI
 import NewItemGUI
 import ModifyItemGUI
 import SelectGUI
+import ExportToZip
 from functools import partial
 
-ModEditorVersion = "0.3.4"
+ModEditorVersion = "0.4.0"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -66,6 +67,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_newMod.triggered.connect(self.on_newMod)
         self.action_loadMod.triggered.connect(self.on_loadMod)
         self.action_save.triggered.connect(self.on_saveMod)
+        self.action_ExportZip.triggered.connect(self.on_exportZip)
         self.action_ResizeMode.triggered.connect(self.on_ChangeCustomContextMenu)
 
         self.tabWidget.setTabsClosable(True)
@@ -526,6 +528,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
             except Exception as ex:
                 print(traceback.format_exc())
+
+    def on_exportZip(self):
+        if self.mod_info:
+            self.on_saveMod()
+            ExportToZip.exportToZip(self.mod_path, self.mod_info)
+
         
     def on_loadMod(self):
         if self.tab_item_dict:

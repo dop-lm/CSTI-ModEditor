@@ -193,9 +193,8 @@ class ModifyItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json"):
-            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + item.field() + r".json", 'r') as f:
-                data = json.load(f)
+        if self.field in DataBase.AllBaseJsonData and item.field() in DataBase.AllBaseJsonData[self.field]:
+            data = DataBase.AllBaseJsonData[self.field][item.field()]
             
             child_key = 0
             while str(child_key) in item.mChilds:
@@ -438,9 +437,8 @@ class ModifyItemGUI(QWidget, Ui_Item):
                             warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
                             if warpDataItem.type() == "list":
                                 if mode == "Empty":
-                                    if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + childItem.field() + r".json"):
-                                        with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + childItem.field() + r".json", 'r') as f:
-                                            data = json.load(f)
+                                    if self.field in DataBase.AllBaseJsonData and childItem.field() in DataBase.AllBaseJsonData[self.field]:
+                                        data = DataBase.AllBaseJsonData[self.field][childItem.field()]
                                     child_key = 0
                                     while str(child_key) in warpDataItem.mChilds:
                                         child_key += 1
@@ -471,9 +469,8 @@ class ModifyItemGUI(QWidget, Ui_Item):
                             warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
                             if warpDataItem.type() == "list":
                                 if mode == "Empty":
-                                    if os.path.exists(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + childItem.field() + r".json"):
-                                        with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + self.field + r"/" + childItem.field() + r".json", 'r') as f:
-                                            data = json.load(f)
+                                    if self.field in DataBase.AllBaseJsonData and childItem.field() in DataBase.AllBaseJsonData[self.field]:
+                                        data = DataBase.AllBaseJsonData[self.field][childItem.field()]
                                     child_key = 0
                                     while str(child_key) in warpDataItem.mChilds:
                                         child_key += 1
