@@ -3,6 +3,7 @@ import json
 import sys
 import os
 import copy
+from glob import glob
 
 def delete_keys_from_dict(src_dict, key: str):
     for field in list(src_dict.keys()):
@@ -42,6 +43,7 @@ class DataBase(object):
     AllPathPlain = {}       # DataBase.AllPathPlain[Ref] -> FilePath
     AllScriptableObject = {}   # DataBase.AllScriptableObject[Ref] -> Guid or Ref
     AllCollection = {}      # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
+    AllListCollection = {}      # DataBase.AllListCollection["CardsDropCollection"][CustomName] -> List json data
     AllNotes = {}           # DataBase.AllNotes["CardData"]["CardName"] -> Note
     AllBaseJsonData = {}    # DataBase.AllBaseJsonData["CardData"]["CardOnCardAction"] -> base json data
 
@@ -106,38 +108,40 @@ class DataBase(object):
         for dir in os.listdir(mod_dir):
             if os.path.isdir(mod_dir + r"/" + dir):
                 if dir in DataBase.RefGuidList:
-                    for file in os.listdir(mod_dir + r"/" + dir):
-                        if file.endswith(".json"):
-                            with open(mod_dir + r"/" + dir + r"/" + file, "r") as f:
-                                data = json.load(f)
-                            ref = mod_name + "_" + file[:-5]
-                            if dir == "CardData":
-                                DataBase.AllRef[dir]["Mod"].append(ref)
-                                DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
-                                DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
-                                DataBase.AllCardData.update({ref : data["UniqueID"]})
-                                DataBase.AllPath[dir].update({ref : mod_dir + r"/" + dir + r"/" + file})
-                                DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
-                            else:
-                                DataBase.AllRef[dir].append(ref)
-                                DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
-                                DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
-                                DataBase.AllPath[dir].update({ref : mod_dir + r"/" + dir + r"/" + file})
-                                DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
+                    for file in [y for x in os.walk(mod_dir + r"/" + dir) for y in glob(os.path.join(x[0], '*.json'))]:
+                        file_name = os.path.basename(file)
+                        with open(file, "r") as f:
+                            data = json.load(f)
+                        ref = mod_name + "_" + file_name[:-5]
+                        if dir == "CardData":
+                            DataBase.AllRef[dir]["Mod"].append(ref)
+                            DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
+                            DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
+                            DataBase.AllCardData.update({ref : data["UniqueID"]})
+                            DataBase.AllPath[dir].update({ref : file})
+                            DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
+                        else:
+                            DataBase.AllRef[dir].append(ref)
+                            DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
+                            DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
+                            DataBase.AllPath[dir].update({ref : file})
+                            DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
                 elif dir == "GameSourceModify":
                     pass
                 elif dir == "ScriptableObject":
                     for sub_dir in os.listdir(mod_dir + r"/" + dir):
-                        for file in os.listdir(mod_dir + r"/" + dir + r"/" + sub_dir):
+                        for file in [y for x in os.walk(mod_dir + r"/" + dir + r"/" + sub_dir) for y in glob(os.path.join(x[0], '*.json'))]:
+                            file_name = os.path.basename(file)  
                             if sub_dir == "ContentPage":
-                                if file.endswith("Default.json"):
-                                    name_parts = file.split("_")
+                                if file_name.endswith("Default.json"):
+                                    name_parts = file_name.split("_")
                                     if len(name_parts) > 2:
                                         DataBase.AllRef["ContentDisplayer"].append(name_parts[0] + "_" + name_parts[1])
                             if file.endswith(".json"):
-                                ref = file[:-5]
-                                DataBase.AllRef[sub_dir].append(file[:-5])
-                                DataBase.AllPath[sub_dir].update({ref : mod_dir + r"/" + dir + r"/"  + sub_dir + R"/" + file})
+                                ref = file_name[:-5]
+                                DataBase.AllRef[sub_dir].append(file_name[:-5])
+                                DataBase.AllPath[sub_dir].update({ref : file})
+                                DataBase.AllScriptableObject.update({ref : ref})
                 elif dir == "Localization":
                     if os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
                         with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
@@ -179,21 +183,22 @@ class DataBase(object):
                 DataBase.RefNameList.append(dir)
 
         for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/"):
-            if file.endswith(".txt"):
-                with open(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/" + file, encoding='utf-8') as f:
-                    temp = f.readlines()
-                    temp = list(map(lambda x: x.replace("\n",""), temp))
-                    DataBase.AllRefBase[file[:-4]] = temp
-                    DataBase.AllScriptableObjectBase.update({k : k for k in temp})
-                    if file[:-4] == "CardTabGroup":
-                        for item in temp:
-                            if item.startswith("Tab_"):
-                                if item.count("_") == 1:
-                                    DataBase.AllBlueprintTab.append(item)
-                                else:
-                                    DataBase.AllBlueprintSubTab.append(item)
-                            if item.startswith("GpTag_"):
-                                DataBase.AllItemTabGpGroup.append(item)
+            if not file.endswith(".txt"):
+                continue
+            with open(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/" + file, encoding='utf-8') as f:
+                temp = f.readlines()
+                temp = list(map(lambda x: x.replace("\n",""), temp))
+                DataBase.AllRefBase[file[:-4]] = temp
+                DataBase.AllScriptableObjectBase.update({k : k for k in temp})
+                if file[:-4] == "CardTabGroup":
+                    for item in temp:
+                        if item.startswith("Tab_"):
+                            if item.count("_") == 1:
+                                DataBase.AllBlueprintTab.append(item)
+                            else:
+                                DataBase.AllBlueprintSubTab.append(item)
+                        if item.startswith("GpTag_"):
+                            DataBase.AllItemTabGpGroup.append(item)
 
         if "WeatherParticles" in DataBase.AllRefBase and "WeatherSpecialEffect" in DataBase.AllRefBase:
             DataBase.AllRefBase["WeatherSpecialEffect"].extend(copy.deepcopy(DataBase.AllRefBase["WeatherParticles"]))
@@ -204,25 +209,27 @@ class DataBase(object):
         DataBase.AllCardDataBase = {}  # Key: Guid
 
         for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/"):
-            if file.endswith(".json"):
-                with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
-                    temp = json.loads(f.read(-1))
-                    DataBase.AllRefBase[file[:-5]] = list(temp.keys())
-                    DataBase.AllGuidBase[file[:-5]] = temp
-                    DataBase.AllGuidPlainBase.update(temp)
-                    DataBase.AllScriptableObjectBase.update(temp)
+            if not file.endswith(".json"):
+                continue
+            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
+                temp = json.loads(f.read(-1))
+                DataBase.AllRefBase[file[:-5]] = list(temp.keys())
+                DataBase.AllGuidBase[file[:-5]] = temp
+                DataBase.AllGuidPlainBase.update(temp)
+                DataBase.AllScriptableObjectBase.update(temp)
 
         DataBase.AllRefBase["CardData"] = {}
         DataBase.AllGuidBase["CardData"] = {}
         for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/CardData/"):
-            if file.endswith(".json"):
-                with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/CardData/" + file, encoding='utf-8') as f:
-                    temp = json.loads(f.read(-1))
-                    DataBase.AllCardDataBase.update(temp)
-                    DataBase.AllGuidBase["CardData"][file[:-5]] = temp
-                    DataBase.AllRefBase["CardData"][file[:-5]] = list(temp.keys())
-                    DataBase.AllGuidPlainBase.update(temp)
-                    DataBase.AllScriptableObjectBase.update(temp)
+            if not file.endswith(".json"):
+                continue
+            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/CardData/" + file, encoding='utf-8') as f:
+                temp = json.loads(f.read(-1))
+                DataBase.AllCardDataBase.update(temp)
+                DataBase.AllGuidBase["CardData"][file[:-5]] = temp
+                DataBase.AllRefBase["CardData"][file[:-5]] = list(temp.keys())
+                DataBase.AllGuidPlainBase.update(temp)
+                DataBase.AllScriptableObjectBase.update(temp)
 
         try:
             for mod_ref_dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/"):
@@ -245,10 +252,29 @@ class DataBase(object):
                                 DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
                                 DataBase.AllGuidPlainBase.update(temp)
                                 DataBase.AllScriptableObjectBase.update(temp)
+
+            for mod_ref_dir in os.listdir(DataBase.DataDir + r"/Mods/ModReference/"):
+                if os.path.isdir(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir):
+                    for file in os.listdir(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
+                        if file.endswith(".json") and file[:-5] in DataBase.AllRefBase:
+                            with open(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
+                                temp = json.loads(f.read(-1))
+                                DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
+                                DataBase.AllGuidBase[file[:-5]].update(temp)
+                                DataBase.AllGuidPlainBase.update(temp)
+                                DataBase.AllScriptableObjectBase.update(temp)
+
+                    for file in os.listdir(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
+                        if file.endswith(".json") and file[:-5] in DataBase.AllGuidBase["CardData"]:
+                            with open(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file, encoding='utf-8') as f:
+                                temp = json.loads(f.read(-1))
+                                DataBase.AllCardDataBase.update(temp)
+                                DataBase.AllGuidBase["CardData"][file[:-5]].update(temp)
+                                DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
+                                DataBase.AllGuidPlainBase.update(temp)
+                                DataBase.AllScriptableObjectBase.update(temp)
         except Exception as ex:
             print(ex)
-
-        # print(DataBase.AllGuidPlainBase.keys())
 
     def loadPath():
         DataBase.AllPathBase = {}  # Type: {Key: Path}
@@ -256,24 +282,17 @@ class DataBase(object):
         for dir in os.listdir(base_path):
             if os.path.isdir(base_path + r"/" + dir):
                 DataBase.AllPathBase[dir] = {}
-                if dir == "CardData":
-                    for sub_dir in os.listdir(base_path + dir):
-                        if os.path.isdir(base_path + r"/" + dir + r"/" + sub_dir):
-                            for file in os.listdir(base_path + dir + r"/" + sub_dir):
-                                if file.endswith(".json"):
-                                    DataBase.AllPathBase[dir][file[:-5]] = base_path + dir + r"/" + sub_dir + r"/" + file
-                else:
-                    for file in os.listdir(base_path + dir):
-                        if file.endswith(".json"):
-                            DataBase.AllPathBase[dir][file[:-5]] = base_path + dir + r"/" + file
+                files = [y for x in os.walk(base_path + dir) for y in glob(os.path.join(x[0], '*.json'))]
+                for file in files:
+                    DataBase.AllPathBase[dir][os.path.basename(file)[:-5]] = file
 
         base_path = DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/"
         for dir in os.listdir(base_path):
             if os.path.isdir(base_path + r"/" + dir):
                 DataBase.AllPathBase[dir] = {}
-                for file in os.listdir(base_path + dir):
-                    if file.endswith(".json"):
-                        DataBase.AllPathBase[dir][file[:-5]] = base_path + dir + r"/" + file
+                files = [y for x in os.walk(base_path + dir) for y in glob(os.path.join(x[0], '*.json'))]
+                for file in files:
+                    DataBase.AllPathBase[dir][os.path.basename(file)[:-5]] = file
 
     def loadBaseJson():
         for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
@@ -282,7 +301,10 @@ class DataBase(object):
                 for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
                     if file.endswith(".json"):
                         with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir + r"/" + file, "r", encoding='utf-8') as f:
-                            DataBase.AllBaseJsonData[dir][file[:-5]] = json.load(f)
+                            try:
+                                DataBase.AllBaseJsonData[dir][file[:-5]] = json.load(f)
+                            except Exception as ex:
+                                print(ex, file)
 
     def loadUniqueIDScriptableField():
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData")
@@ -292,7 +314,7 @@ class DataBase(object):
                     try:
                         DataBase.AllTypeField[file[:-5]] = json.loads(f.read(-1))
                     except Exception as ex:
-                        pass
+                        print(ex, file)
 
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData/EnumType")
         for file in files:
@@ -301,7 +323,7 @@ class DataBase(object):
                     try:
                         DataBase.AllEnum[file[:-5]] = json.loads(f.read(-1))
                     except Exception as ex:
-                        pass
+                        print(ex, file)
         
         for key, item in DataBase.AllEnum.items():
             DataBase.AllEnumRev[key] = {v : k for k, v in DataBase.AllEnum[key].items()}
@@ -322,12 +344,19 @@ class DataBase(object):
                 if  sub_key not in DataBase.AllCollection:
                     DataBase.AllCollection[sub_key] = {}
                 DataBase.AllCollection[sub_key]["默认空白项"] = DataBase.AllBaseJsonData[key][sub_key]
+
+        if os.path.exists(DataBase.DataDir + r"/Mods/" + r"ListCollection.json"):
+            with open(DataBase.DataDir + r"/Mods/" + r"ListCollection.json", "r", encoding='utf-8') as f:
+                DataBase.AllListCollection = json.load(f)
                             
     def saveCollection():
         temp_dict = copy.deepcopy(DataBase.AllCollection)
         delete_keys_from_dict(temp_dict, "默认空白项")
         with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllCollection, f)
+
+        with open(DataBase.DataDir + r"/Mods/" + r"ListCollection.json", "w", encoding='utf-8') as f:
+            json.dump(DataBase.AllListCollection, f)
 
     def loopLoadModSimpCn(json, mod_name):
         if type(json) is dict:

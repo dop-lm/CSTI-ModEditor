@@ -11,10 +11,11 @@ from CollectionGUI import *
 from data_base import *
 
 class ItemGUI(QWidget, Ui_Item):
-    def __init__(self, field, auto_resize = True, parent = None):
+    def __init__(self, field, auto_resize = True, key: str = "", parent = None):
         super(ItemGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
+        self.tab_key = key
         self.treeView.setItemDelegateForColumn(1, ItemDelegate(self.field, self.treeView))
         self.treeView.setItemDelegateForColumn(4, EnableDelegate(self.treeView))
         self.treeView.setSortingEnabled(True)
@@ -32,6 +33,9 @@ class ItemGUI(QWidget, Ui_Item):
 
         self.lineEdit.textChanged.connect(self.on_lineEditTextChanged)
 
+        self.addSpecialButton()
+
+    def addSpecialButton(self):
         if self.field == "CardData":
             tabButton = QPushButton("添加蓝图主分组", self)
             tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
@@ -61,9 +65,8 @@ class ItemGUI(QWidget, Ui_Item):
             tabButton.clicked.connect(self.on_tabButtonPlayerCharacterJournalName)
             self.horizontalLayout.insertWidget(2, tabButton)
 
-        # self.test_button = QPushButton("Test")
-        # self.horizontalLayout.addWidget(self.test_button)
-        # self.test_button.clicked.connect(self.on_test)
+    def setTabKey(self, key: str):
+        self.tab_key = key
 
     def on_tabButtonPlayerCharacterJournalName(self):
         select = SelectGUI(self.treeView, field_name = "PlayerCharacterJournalName", type = SelectGUI.Special)
@@ -160,7 +163,7 @@ class ItemGUI(QWidget, Ui_Item):
 
                 if item.parent().type() == "list" and item.depth() > 1:
                     pDeleteAct = QAction("删除", menu)
-                    pDeleteAct.triggered.connect(self.on_delListItem)
+                    pDeleteAct.triggered.connect(self.on_delItemFromList)
                     menu.addAction(pDeleteAct)
 
                 if item.type() == "list" or item.type() == "dict":
@@ -190,7 +193,7 @@ class ItemGUI(QWidget, Ui_Item):
 
                         if item.type() == "list":
                             pAddAct = QAction("追加模板项", menu)
-                            pAddAct.triggered.connect(self.on_addListItem)
+                            pAddAct.triggered.connect(self.on_addItemToList)
                             menu.addAction(pAddAct)
 
                     if item.type() == "dict":
@@ -204,12 +207,24 @@ class ItemGUI(QWidget, Ui_Item):
 
                     if item.type() == "list":
                         pNewAct = QAction("新建空白项", menu)
-                        pNewAct.triggered.connect(self.on_newListItem)
+                        pNewAct.triggered.connect(self.on_newItemToList)
                         menu.addAction(pNewAct)
 
                         pNewAct = QAction("载入收藏", menu)
-                        pNewAct.triggered.connect(self.on_loadListItem)
+                        pNewAct.triggered.connect(self.on_loadItem)
                         menu.addAction(pNewAct)
+
+                        pSaveListAct = QAction("收藏整个列表", menu)
+                        pSaveListAct.triggered.connect(self.on_saveListItem)
+                        menu.addAction(pSaveListAct)
+
+                        pNewListAct = QAction("载入整个列表收藏", menu)
+                        pNewListAct.triggered.connect(self.on_loadListItem)
+                        menu.addAction(pNewListAct)
+
+                        pDelListAct = QAction("删除整个列表", menu)
+                        pDelListAct.triggered.connect(self.on_delListItem)
+                        menu.addAction(pDelListAct)
 
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
@@ -229,11 +244,18 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
             self.model.deleteItem(srcIndex)
 
-    def on_delListItem(self) -> None:
+    def on_delItemFromList(self) -> None:
         index = self.treeView.currentIndex()
         self.model.removeListItem(index)
 
-    def on_addListItem(self) -> None:
+    def on_delListItem(self) -> None:
+        reply = QMessageBox.question(self, '警告', '确定要删除整个列表吗', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            index = self.treeView.currentIndex()
+            for i in reversed(range(index.row())):
+                self.model.removeListItem(index.child(i, 0))
+
+    def on_addItemToList(self) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -259,8 +281,7 @@ class ItemGUI(QWidget, Ui_Item):
                                 self.model.addJsonItem(srcIndex, sub_data, item.field(), str(child_key))
                         return
             
-
-    def on_newListItem(self) -> None:
+    def on_newItemToList(self) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -277,7 +298,7 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
-    def on_loadListItem(self) -> None:
+    def on_loadItem(self) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -288,7 +309,7 @@ class ItemGUI(QWidget, Ui_Item):
         if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
             QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
             return
-        self.loadCollection = CollectionGUI(item.field(), self)
+        self.loadCollection = CollectionGUI(item.field(), DataBase.AllCollection, self)
         self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
         self.loadCollection.exec_()
         
@@ -299,6 +320,31 @@ class ItemGUI(QWidget, Ui_Item):
             while str(child_key) in item.mChilds:
                 child_key += 1
             self.model.addJsonItem(srcIndex, DataBase.AllCollection[item.field()][name], item.field(), str(child_key))
+            return
+
+    def on_loadListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if item.field() not in DataBase.AllListCollection or len(DataBase.AllListCollection[item.field()]) == 0:
+            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            return
+        self.loadCollection = CollectionGUI(item.field(), DataBase.AllListCollection, self)
+        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+        self.loadCollection.exec_()
+        
+        name = self.loadCollection.lineEdit.text()
+        
+        if self.loadCollection.write_flag and name in DataBase.AllListCollection[item.field()]:
+            for i in range(len(DataBase.AllListCollection[item.field()][name])):
+                child_key = 0
+                while str(child_key) in item.mChilds:
+                    child_key += 1
+                self.model.addJsonItem(srcIndex, DataBase.AllListCollection[item.field()][name][i], item.field(), str(child_key))
             return
 
     def on_saveItem(self) -> None:
@@ -315,6 +361,20 @@ class ItemGUI(QWidget, Ui_Item):
         self.newSave.setWindowTitle("添加" + item.field() + "类型收藏")
         self.newSave.exec_()
 
+    def on_saveListItem(self) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        self.newSaveList = NewItemGUI(self)
+        self.newSaveList.buttonBox.accepted.connect(lambda : self.on_newSaveListButtonBoxAccepted(item))
+        self.newSaveList.setWindowTitle("添加" + item.field() + "[]类型收藏")
+        self.newSaveList.exec_()
+
     def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
         name = self.newSave.lineEdit.text()
         if not name:
@@ -326,6 +386,18 @@ class ItemGUI(QWidget, Ui_Item):
             if reply == QMessageBox.No:
                 return
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
+
+    def on_newSaveListButtonBoxAccepted(self, item: QJsonTreeItem):
+        name = self.newSaveList.lineEdit.text()
+        if not name:
+            return
+        if item.field() not in DataBase.AllListCollection:
+            DataBase.AllListCollection[item.field()] = {}
+        if name in DataBase.AllListCollection[item.field()]:
+            reply = QMessageBox.question(self, '警告', '是否覆盖同名收藏', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
+        DataBase.AllListCollection[item.field()][name] = self.model.to_json(item)
 
     def on_copyItem(self) -> None:
         index = self.treeView.currentIndex()
@@ -362,7 +434,7 @@ class ItemGUI(QWidget, Ui_Item):
             if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
                 QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
                 return
-            self.loadCollection = CollectionGUI(item.field(), self)
+            self.loadCollection = CollectionGUI(item.field(), DataBase.AllCollection, self)
             self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
             self.loadCollection.exec_()
             
@@ -413,18 +485,3 @@ class ItemGUI(QWidget, Ui_Item):
             while str(child_key) in item.mChilds:
                 child_key += 1
             srcModel.addJsonItem(srcIndex, {"m_FileID": "", "m_PathID": ""}, None, str(child_key))
-            
-
-    # def on_test(self):
-    #     index = self.treeView.currentIndex()
-    #     if index.isValid():
-    #         srcIndex = self.proxy_model.mapToSource(index)
-    #         item = srcIndex.internalPointer()
-    #         print(item.key(), item.childCount())
-    #         print(id(self.model))
-    #         self.model.beginInsertRows(srcIndex, item.childCount(), item.childCount())
-    #         # child = QJsonTreeItem.load(sub_data, type_key = item.field(), parent = item, itemKey = str(child_key))
-    #         # item.appendChild(child.key(), child)
-    #         self.model.endInsertRows()
-
-        

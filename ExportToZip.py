@@ -17,16 +17,16 @@ def exportToZip(dir: str, mod_info: dict):
         temp_dir = dir + "_temp~"
         if os.path.isdir(dir):
             shutil.copytree(dir, temp_dir + "/" + mod_info["Name"], ignore=shutil.ignore_patterns(".git"))
-            files = [y for x in os.walk(temp_dir) for y in glob(os.path.join(x[0], '*.json'))]
-            for file in files:
-                if file.endswith("ModInfo.json"):
-                    continue
-                else:
-                    with open(file, "r") as f:
-                        json_data = json.load(f)
-                        toJsonMinimalism(json_data)
-                    with open(file, "w") as f:
-                        json.dump(json_data, f)
+            # files = [y for x in os.walk(temp_dir) for y in glob(os.path.join(x[0], '*.json'))]
+            # for file in files:
+            #     if file.endswith("ModInfo.json"):
+            #         continue
+            #     else:
+            #         with open(file, "r") as f:
+            #             json_data = json.load(f)
+            #             toJsonMinimalism(json_data)
+            #         with open(file, "w") as f:
+            #             json.dump(json_data, f)
             zipname = os.path.split(temp_dir)[0] + "/%s-%s-ModLoader%s" % (mod_info["Name"], mod_info["Version"], mod_info["ModLoaderVerison"])
             shutil.make_archive(zipname, 'zip', temp_dir)
             shutil.rmtree(temp_dir)

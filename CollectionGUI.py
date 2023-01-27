@@ -6,13 +6,14 @@ from Ui_Collection import *
 from data_base import *
 
 class CollectionGUI(QDialog, Ui_Collection):
-    def __init__(self, field, parent = None):
+    def __init__(self, field, database, parent = None):
         super(CollectionGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
         self.write_flag = False
+        self.database = database
 
-        self.listWidget.addItems(list(DataBase.AllCollection[field].keys()))
+        self.listWidget.addItems(list(self.database[field].keys()))
         self.listWidget.setSortingEnabled(True)
         self.listWidget.setDragEnabled(True)
         
@@ -48,7 +49,7 @@ class CollectionGUI(QDialog, Ui_Collection):
         item = self.listWidget.currentItem()
         self.listWidget.takeItem(self.listWidget.row(item))
         self.m_completer.setModel(self.listWidget.model())
-        del DataBase.AllCollection[self.field][item.text()]
+        del self.database[self.field][item.text()]
 
     def on_accepted(self, button: QAbstractButton):
         if button == self.buttonBox.button(QDialogButtonBox.Ok):
