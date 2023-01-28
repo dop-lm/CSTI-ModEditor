@@ -20,19 +20,22 @@ import ExportToZip
 from glob import glob
 from functools import partial
 
-ModEditorVersion = "0.4.1"
+ModEditorVersion = "0.4.3"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
-        super(ModEditorGUI, self).__init__(parent)
-        self.setupUi(self)
-        self.dataInit()
-        self.ui_Init()
-        self.mod_path = None
-        self.mod_info = None
-        self.file_model = None
-        self.root_depth = 0
-        self.tab_item_dict = {}
+        try:
+            super(ModEditorGUI, self).__init__(parent)
+            self.setupUi(self)
+            self.dataInit()
+            self.ui_Init()
+            self.mod_path = None
+            self.mod_info = None
+            self.file_model = None
+            self.root_depth = 0
+            self.tab_item_dict = {}
+        except Exception as ex:
+            QMessageBox.warning(self, "异常", traceback.format_exc(), QMessageBox.Yes, QMessageBox.Yes)
 
     def reset(self):
         self.mod_path = None
@@ -547,35 +550,35 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.loadMod(mod_path)
 
     def loadMod(self, mod_path):
-        self.reset()
-        self.mod_path = mod_path
+        try:
+            self.reset()
+            self.mod_path = mod_path
 
-        with open(self.mod_path + "/ModInfo.json", "r") as f:
-            self.mod_info = json.load(f)
-        if not "Name" in self.mod_info or not self.mod_info["Name"]:
-            self.mod_info["Name"] = os.path.basename(self.mod_path)
-        self.mod_info["ModEditorVersion"] = ModEditorVersion
+            with open(self.mod_path + "/ModInfo.json", "r") as f:
+                self.mod_info = json.load(f)
+            if not "Name" in self.mod_info or not self.mod_info["Name"]:
+                self.mod_info["Name"] = os.path.basename(self.mod_path)
+            self.mod_info["ModEditorVersion"] = ModEditorVersion
 
-        DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
+            DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
 
-        self.file_model = QFileSystemModel()
-        self.file_model.setRootPath(self.mod_path)
-        self.file_model.setReadOnly(False)
-        self.file_model.fileRenamed.connect(self.treeItemRenamed)
-        self.treeView.setModel(self.file_model)
-        self.treeView.setRootIndex(self.file_model.index(self.mod_path))
-        self.root_depth = self.treeItemDepth(self.file_model.index(self.mod_path))
-        self.treeView.setDragDropMode(QAbstractItemView.DragDrop)
-        self.treeView.setDefaultDropAction(Qt.MoveAction)
-        self.treeView.setColumnHidden(1, True)
-        self.treeView.setColumnHidden(2, True)
-        self.treeView.setColumnHidden(3, True)
+            self.file_model = QFileSystemModel()
+            self.file_model.setRootPath(self.mod_path)
+            self.file_model.setReadOnly(False)
+            self.file_model.fileRenamed.connect(self.treeItemRenamed)
+            self.treeView.setModel(self.file_model)
+            self.treeView.setRootIndex(self.file_model.index(self.mod_path))
+            self.root_depth = self.treeItemDepth(self.file_model.index(self.mod_path))
+            self.treeView.setDragDropMode(QAbstractItemView.DragDrop)
+            self.treeView.setDefaultDropAction(Qt.MoveAction)
+            self.treeView.setColumnHidden(1, True)
+            self.treeView.setColumnHidden(2, True)
+            self.treeView.setColumnHidden(3, True)
 
-        self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"]))
-        self.init_completer()
-
-    def test(self):
-        print("test")
+            self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"]))
+            self.init_completer()
+        except Exception as ex:
+            QMessageBox.warning(self, "异常", traceback.format_exc(), QMessageBox.Yes, QMessageBox.Yes)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

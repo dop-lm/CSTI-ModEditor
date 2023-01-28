@@ -252,8 +252,7 @@ class ItemGUI(QWidget, Ui_Item):
         reply = QMessageBox.question(self, '警告', '确定要删除整个列表吗', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.No)
         if reply == QMessageBox.Yes:
             index = self.treeView.currentIndex()
-            for i in reversed(range(index.row())):
-                self.model.removeListItem(index.child(i, 0))
+            self.model.removeAllListChild(index)
 
     def on_addItemToList(self) -> None:
         index = self.treeView.currentIndex()

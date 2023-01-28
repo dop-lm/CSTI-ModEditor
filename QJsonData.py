@@ -423,6 +423,20 @@ class QJsonModel(QAbstractItemModel):
                 del item.parent().mChilds[item.key()]
                 self.endRemoveRows()
 
+    def removeAllListChild(self, index: QModelIndex):
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+            if item.type() == "list" and len(item.mChilds) > 0:
+                self.beginRemoveRows(srcIndex, 0, len(item.mChilds))
+                for key in list(item.mChilds.keys()):
+                    del item.mChilds[key]
+                self.endRemoveRows()
+
     def addRefWarp(self, index: QModelIndex, value: str, key: str = None, field: str = None, brother: bool = True):
         if index.isValid():
             model = index.model()
