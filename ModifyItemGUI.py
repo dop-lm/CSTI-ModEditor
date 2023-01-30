@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -9,6 +11,7 @@ from NewItemGUI import *
 from ItemDelegate import *
 from ItemGUI import *
 from data_base import *
+from myLogger import *
 
 class ModifyItemGUI(ItemGUI):
     def __init__(self, field, auto_resize = True, key: str = "", parent = None):
@@ -24,7 +27,8 @@ class ModifyItemGUI(ItemGUI):
             cardTypeButton.clicked.connect(self.on_cardTypeButton)
             self.horizontalLayout.insertWidget(3, cardTypeButton)
 
-    def on_cardTagButton(self) -> None:
+    @log_exception(True)
+    def on_cardTagButton(self, checked: bool=False) -> None:
         select = SelectGUI(self.treeView, field_name = "CardTag", type = SelectGUI.Ref)
         select.exec_()
 
@@ -41,7 +45,8 @@ class ModifyItemGUI(ItemGUI):
                 self.model.addItem(itemIndex, "0", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def on_cardTypeButton(self) -> None:
+    @log_exception(True)
+    def on_cardTypeButton(self, checked: bool=False) -> None:
         select = SelectGUI(self.treeView, field_name = "CardTypes", type = SelectGUI.Ref)
         select.exec_()
 
@@ -49,6 +54,7 @@ class ModifyItemGUI(ItemGUI):
             self.model.addItem(QModelIndex(), "MatchTypeWarpData", str, select.lineEdit.text(), "SpecialWarp", True)
             return
     
+    @log_exception(True)
     def on_treeViewCustomContextMenuRequested(self, pos: QPoint) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
@@ -141,7 +147,8 @@ class ModifyItemGUI(ItemGUI):
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
 
-    def on_loadCollItem(self) -> None:
+    @log_exception(True)
+    def on_loadCollItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -161,7 +168,8 @@ class ModifyItemGUI(ItemGUI):
         if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
             self.addWarpItem(index, "Collection", DataBase.AllCollection[item.field()][name])
 
-    def on_loadCollListItem(self) -> None:
+    @log_exception(True)
+    def on_loadCollListItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -182,6 +190,7 @@ class ModifyItemGUI(ItemGUI):
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
                 self.addWarpItem(index, "Collection", DataBase.AllListCollection[item.field()][name][i])
 
+    @log_exception(True)
     def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
         name = self.newSave.lineEdit.text()
         if not name:
@@ -194,7 +203,8 @@ class ModifyItemGUI(ItemGUI):
                 return
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
 
-    def on_addAddRefItem(self) -> None:
+    @log_exception(True)
+    def on_addAddRefItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -226,7 +236,8 @@ class ModifyItemGUI(ItemGUI):
                     # self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
                     return
 
-    def on_addEmptyItem(self):
+    @log_exception(True)
+    def on_addEmptyItem(self, checked: bool=False):
         index = self.treeView.currentIndex()
         self.addWarpItem(index, "Empty")
                     

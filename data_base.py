@@ -4,6 +4,7 @@ import sys
 import os
 import copy
 from glob import glob
+from myLogger import *
 
 def delete_keys_from_dict(src_dict, key: str):
     for field in list(src_dict.keys()):
@@ -274,8 +275,8 @@ class DataBase(object):
                                 DataBase.AllGuidPlainBase.update(temp)
                                 DataBase.AllScriptableObjectBase.update(temp)
         except Exception as ex:
-            print(ex)
-
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+            
     def loadPath():
         DataBase.AllPathBase = {}  # Type: {Key: Path}
         base_path = DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableJsonDataWithWarpLitAllInOne/"
@@ -304,7 +305,7 @@ class DataBase(object):
                             try:
                                 DataBase.AllBaseJsonData[dir][file[:-5]] = json.load(f)
                             except Exception as ex:
-                                print(ex, file)
+                                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def loadUniqueIDScriptableField():
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData")
@@ -314,7 +315,7 @@ class DataBase(object):
                     try:
                         DataBase.AllTypeField[file[:-5]] = json.loads(f.read(-1))
                     except Exception as ex:
-                        print(ex, file)
+                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData/EnumType")
         for file in files:
@@ -323,7 +324,7 @@ class DataBase(object):
                     try:
                         DataBase.AllEnum[file[:-5]] = json.loads(f.read(-1))
                     except Exception as ex:
-                        print(ex, file)
+                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
         
         for key, item in DataBase.AllEnum.items():
             DataBase.AllEnumRev[key] = {v : k for k, v in DataBase.AllEnum[key].items()}

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -68,7 +70,8 @@ class ItemGUI(QWidget, Ui_Item):
     def setTabKey(self, key: str):
         self.tab_key = key
 
-    def on_tabButtonPlayerCharacterJournalName(self):
+    @log_exception(True)
+    def on_tabButtonPlayerCharacterJournalName(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "PlayerCharacterJournalName", type = SelectGUI.Special)
         select.exec_()
 
@@ -76,7 +79,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addItem(QModelIndex(), "PlayerCharacterJournalName", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def on_tabButtonCardDataMainTabGroup(self):
+    @log_exception(True)
+    def on_tabButtonCardDataMainTabGroup(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "BlueprintCardDataCardTabGroup", type = SelectGUI.Special)
         select.exec_()
 
@@ -84,7 +88,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabGroup", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def on_tabButtonCardDataSubTabGroup(self):
+    @log_exception(True)
+    def on_tabButtonCardDataSubTabGroup(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "BlueprintCardDataCardTabSubGroup", type = SelectGUI.Special)
         select.exec_()
 
@@ -92,7 +97,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabSubGroup", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def on_tabButtonCharacterPerk(self):
+    @log_exception(True)
+    def on_tabButtonCharacterPerk(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "CharacterPerkPerkGroup", type = SelectGUI.Special)
         select.exec_()
 
@@ -100,7 +106,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addItem(QModelIndex(), "CharacterPerkPerkGroup", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def on_tabButtonCardDataGpTabGroup(self):
+    @log_exception(True)
+    def on_tabButtonCardDataGpTabGroup(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "ItemCardDataCardTabGpGroup", type = SelectGUI.Special)
         select.exec_()
 
@@ -117,7 +124,8 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.addItem(itemIndex, "0", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def on_tabButtonGameStat(self):
+    @log_exception(True)
+    def on_tabButtonGameStat(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "VisibleGameStatStatListTab", type = SelectGUI.Special)
         select.exec_()
 
@@ -134,7 +142,8 @@ class ItemGUI(QWidget, Ui_Item):
         for i in range(self.model.columnCount()):
             self.treeView.resizeColumnToContents(i)
 
-    def on_showInvalidButtonClicked(self) -> None:
+    @log_exception(True)
+    def on_showInvalidButtonClicked(self, checked: bool=False) -> None:
         if self.showInvalidButton.text() == "显示未激活属性":
             self.showInvalidButton.setText("隐藏未激活属性")
             self.proxy_model.setVaildFilter(False)
@@ -142,9 +151,11 @@ class ItemGUI(QWidget, Ui_Item):
             self.showInvalidButton.setText("显示未激活属性")
             self.proxy_model.setVaildFilter(True)
 
+    @log_exception(True)
     def on_lineEditTextChanged(self, key: str) -> None:
         self.proxy_model.setKeyFilter(key)
     
+    @log_exception(True)
     def on_treeViewCustomContextMenuRequested(self, pos: QPoint) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
@@ -229,12 +240,14 @@ class ItemGUI(QWidget, Ui_Item):
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
 
-    def on_actExpandAll(self) -> None:
+    @log_exception(True)
+    def on_actExpandAll(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             self.treeView.expandRecursively(index)
 
-    def on_delItem(self) -> None:
+    @log_exception(True)
+    def on_delItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -244,17 +257,20 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
             self.model.deleteItem(srcIndex)
 
-    def on_delItemFromList(self) -> None:
+    @log_exception(True)
+    def on_delItemFromList(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         self.model.removeListItem(index)
 
-    def on_delListItem(self) -> None:
+    @log_exception(True)
+    def on_delListItem(self, checked: bool=False) -> None:
         reply = QMessageBox.question(self, '警告', '确定要删除整个列表吗', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.No)
         if reply == QMessageBox.Yes:
             index = self.treeView.currentIndex()
             self.model.removeAllListChild(index)
 
-    def on_addItemToList(self) -> None:
+    @log_exception(True)
+    def on_addItemToList(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -279,8 +295,9 @@ class ItemGUI(QWidget, Ui_Item):
                                     child_key += 1
                                 self.model.addJsonItem(srcIndex, sub_data, item.field(), str(child_key))
                         return
-            
-    def on_newItemToList(self) -> None:
+    
+    @log_exception(True)
+    def on_newItemToList(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -297,7 +314,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
-    def on_loadItem(self) -> None:
+    @log_exception(True)
+    def on_loadItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -321,7 +339,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addJsonItem(srcIndex, DataBase.AllCollection[item.field()][name], item.field(), str(child_key))
             return
 
-    def on_loadListItem(self) -> None:
+    @log_exception(True)
+    def on_loadListItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -346,7 +365,8 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.addJsonItem(srcIndex, DataBase.AllListCollection[item.field()][name][i], item.field(), str(child_key))
             return
 
-    def on_saveItem(self) -> None:
+    @log_exception(True)
+    def on_saveItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -360,7 +380,8 @@ class ItemGUI(QWidget, Ui_Item):
         self.newSave.setWindowTitle("添加" + item.field() + "类型收藏")
         self.newSave.exec_()
 
-    def on_saveListItem(self) -> None:
+    @log_exception(True)
+    def on_saveListItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -374,6 +395,7 @@ class ItemGUI(QWidget, Ui_Item):
         self.newSaveList.setWindowTitle("添加" + item.field() + "[]类型收藏")
         self.newSaveList.exec_()
 
+    @log_exception(True)
     def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
         name = self.newSave.lineEdit.text()
         if not name:
@@ -386,6 +408,7 @@ class ItemGUI(QWidget, Ui_Item):
                 return
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
 
+    @log_exception(True)
     def on_newSaveListButtonBoxAccepted(self, item: QJsonTreeItem):
         name = self.newSaveList.lineEdit.text()
         if not name:
@@ -398,7 +421,8 @@ class ItemGUI(QWidget, Ui_Item):
                 return
         DataBase.AllListCollection[item.field()][name] = self.model.to_json(item)
 
-    def on_copyItem(self) -> None:
+    @log_exception(True)
+    def on_copyItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -421,7 +445,8 @@ class ItemGUI(QWidget, Ui_Item):
                         self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                         return
 
-    def on_copyCollItem(self) -> None:
+    @log_exception(True)
+    def on_copyCollItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -443,7 +468,8 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.addJsonItem(srcIndex.parent(), DataBase.AllCollection[item.field()][name], item.field(), item.key())
                 return
 
-    def on_addRefItem(self) -> None:
+    @log_exception(True)
+    def on_addRefItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -471,7 +497,8 @@ class ItemGUI(QWidget, Ui_Item):
                     self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
                     return
 
-    def on_addEmptyRefItem(self) -> None:
+    @log_exception(True)
+    def on_addEmptyRefItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()

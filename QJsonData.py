@@ -1,4 +1,4 @@
-# 2017 by Gregor Engberding , MIT License
+# -*- coding: utf-8 -*- 
 
 import sys
 import re
@@ -670,7 +670,7 @@ class QJsonModel(QAbstractItemModel):
             parentItem.appendChild(key, brotherItem)
             self.endInsertRows()
         except Exception as ex:
-            print(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def addJsonItem(self, index: QModelIndex, json: dict, field: str, key: str):
         try:
@@ -689,7 +689,7 @@ class QJsonModel(QAbstractItemModel):
             childIndex = self.index(childItem.row(), 0, index)
             self.loopSetWarpField(item, item)
         except Exception as ex:
-            print(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def loopInsertJsonRow(self, item: QJsonTreeItem, index: QModelIndex):
         print(item.key(), item.childCount())
@@ -715,7 +715,7 @@ class QJsonModel(QAbstractItemModel):
             item.setVaild(True)
             self.endInsertRows()
         except Exception as ex:
-            print(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def deleteBrother(self, index: QModelIndex, key: str):
         try:
@@ -725,7 +725,7 @@ class QJsonModel(QAbstractItemModel):
                 brotherIndex = self.index(brotherItem.row(), 0, index.parent())
                 self.deleteItem(brotherIndex)
         except Exception as ex:
-            print(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def deleteItem(self, index: QModelIndex):
         try:
@@ -737,7 +737,7 @@ class QJsonModel(QAbstractItemModel):
             del parentItem.mChilds[item.key()]
             self.endRemoveRows()
         except Exception as ex:
-            print(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def deleteChildItem(self, index: QModelIndex, key: str):
         try:
@@ -746,7 +746,7 @@ class QJsonModel(QAbstractItemModel):
             del item.mChilds[key]
             self.endRemoveRows()
         except Exception as ex:
-            print(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     def setData(self, index: QModelIndex, value, role: int = ...) -> bool:
         if not index.isValid():

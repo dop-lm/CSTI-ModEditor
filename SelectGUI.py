@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -140,8 +142,9 @@ class SelectGUI(QDialog, Ui_Select):
             self.comboBox.currentTextChanged.connect(self.on_Choosed)
             self.buttonBox.clicked.connect(self.on_accepted)
         except Exception as ex:
-            pass
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
+    @log_exception(True)
     def on_CardDataCheckBoxStateChanged(self, a0: int):
         self.comboBox.clear()
         reflist = []
@@ -151,6 +154,7 @@ class SelectGUI(QDialog, Ui_Select):
                 self.comboBox.addItems(DataBase.AllRef[self.field_name][key])
         self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
 
+    @log_exception(True)
     def on_GameSourceModifyCheckBoxStateChanged(self, a0: int):
         self.comboBox.clear()
         reflist = []
@@ -164,6 +168,7 @@ class SelectGUI(QDialog, Ui_Select):
                     self.comboBox.addItems(list(DataBase.AllGuid[key].keys()))
         self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
 
+    @log_exception(True)
     def on_ScriptableObjectCheckBoxStateChanged(self, a0: int):
         self.comboBox.clear()
         reflist = []
@@ -179,9 +184,11 @@ class SelectGUI(QDialog, Ui_Select):
                         self.comboBox.addItems(DataBase.AllRef[key])
         self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
 
+    @log_exception(True)
     def on_Choosed(self, name):
         self.lineEdit.setText(name)
 
+    @log_exception(True)
     def on_accepted(self, button: QAbstractButton):
         if button == self.buttonBox.button(QDialogButtonBox.Ok):
             self.write_flag = True

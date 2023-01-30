@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*- 
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -30,12 +32,15 @@ class CollectionGUI(QDialog, Ui_Collection):
 
         self.buttonBox.clicked.connect(self.on_accepted)
 
+    @log_exception(True)
     def on_Choosed(self, text):
         self.lineEdit.setText(text)
 
+    @log_exception(True)
     def on_listWidgetItemClicked(self, item: QListWidgetItem):
         self.lineEdit.setText(item.text())
 
+    @log_exception(True)
     def on_listWidgetCustomContextMenuRequested(self, pos: QPoint):
         item = self.listWidget.currentItem()
         if item is not None:
@@ -45,12 +50,14 @@ class CollectionGUI(QDialog, Ui_Collection):
             menu.addAction(pDeleteAct)
             menu.popup(self.sender().mapToGlobal(pos))
 
-    def on_delItem(self):
+    @log_exception(True)
+    def on_delItem(self, checked: bool=False):
         item = self.listWidget.currentItem()
         self.listWidget.takeItem(self.listWidget.row(item))
         self.m_completer.setModel(self.listWidget.model())
         del self.database[self.field][item.text()]
 
+    @log_exception(True)
     def on_accepted(self, button: QAbstractButton):
         if button == self.buttonBox.button(QDialogButtonBox.Ok):
             self.write_flag = True
