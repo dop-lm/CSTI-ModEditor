@@ -30,7 +30,8 @@ class ItemGUI(QWidget, Ui_Item):
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)
 
-        self.showInvalidButton.setText("显示未激活属性")
+        self.showInvalidButton.setText(self.tr("Show invalid entries"))
+        self.show_invalid = False
         self.showInvalidButton.clicked.connect(self.on_showInvalidButtonClicked)
 
         self.lineEdit.textChanged.connect(self.on_lineEditTextChanged)
@@ -39,31 +40,31 @@ class ItemGUI(QWidget, Ui_Item):
 
     def addSpecialButton(self):
         if self.field == "CardData":
-            tabButton = QPushButton("添加蓝图主分组", self)
+            tabButton = QPushButton(self.tr("Add blueprint main group"), self)
             tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
             self.horizontalLayout.insertWidget(2, tabButton)
-            subTabButton = QPushButton("添加蓝图次分组", self)
+            subTabButton = QPushButton(self.tr("Add blueprint sub group"), self)
             subTabButton.clicked.connect(self.on_tabButtonCardDataSubTabGroup)
             self.horizontalLayout.insertWidget(3, subTabButton)
-            label = QLabel("<-不是蓝图的卡别添加")
+            label = QLabel(self.tr("<-Don't add that cardtype are not blueprint"))
             self.horizontalLayout.insertWidget(4, label)
-            subGpTabButton = QPushButton("添加所属类型组", self)
+            subGpTabButton = QPushButton(self.tr("Add the CardTabGroup which it belong"), self)
             subGpTabButton.clicked.connect(self.on_tabButtonCardDataGpTabGroup)
             self.horizontalLayout.insertWidget(5, subGpTabButton)
         if self.field == "CharacterPerk":
-            tabButton = QPushButton("添加特性互斥组", self)
+            tabButton = QPushButton(self.tr("Add perk exclusive group"), self)
             self.horizontalLayout.insertWidget(2, tabButton)
             tabButton.clicked.connect(self.on_tabButtonCharacterPerk)
         if self.field == "GameStat":
-            tabButton = QPushButton("添加可显示状态分组", self)
+            tabButton = QPushButton(self.tr("Add displayable status group"), self)
             self.horizontalLayout.insertWidget(2, tabButton)
             tabButton.clicked.connect(self.on_tabButtonGameStat)
         if self.field == "CardTabGroup":
-            tabButton = QPushButton("添加蓝图主分组", self)
+            tabButton = QPushButton(self.tr("Add blueprint main group"), self)
             tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
             self.horizontalLayout.insertWidget(2, tabButton)
         if self.field == "PlayerCharacter":
-            tabButton = QPushButton("添加角色任务", self)
+            tabButton = QPushButton(self.tr("Add character journal"), self)
             tabButton.clicked.connect(self.on_tabButtonPlayerCharacterJournalName)
             self.horizontalLayout.insertWidget(2, tabButton)
 
@@ -144,12 +145,14 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_showInvalidButtonClicked(self, checked: bool=False) -> None:
-        if self.showInvalidButton.text() == "显示未激活属性":
-            self.showInvalidButton.setText("隐藏未激活属性")
+        if not self.show_invalid:
+            self.showInvalidButton.setText(self.tr("Hide invalid entries"))
             self.proxy_model.setVaildFilter(False)
+            self.show_invalid = True
         else:
-            self.showInvalidButton.setText("显示未激活属性")
+            self.showInvalidButton.setText(self.tr("Show invalid entries"))
             self.proxy_model.setVaildFilter(True)
+            self.show_invalid = False
 
     @log_exception(True)
     def on_lineEditTextChanged(self, key: str) -> None:
@@ -168,29 +171,33 @@ class ItemGUI(QWidget, Ui_Item):
             menu = QMenu(self.treeView)
             if item.parent() is not None:
                 if item.field() == "SpecialWarp" and item.depth() == 1:
-                    pDeleteAct = QAction("删除", menu)
+                    pDeleteAct = QAction(self.tr("Delete"), menu)
                     pDeleteAct.triggered.connect(self.on_delItem)
                     menu.addAction(pDeleteAct)
 
                 if item.parent().type() == "list" and item.depth() > 1:
-                    pDeleteAct = QAction("删除", menu)
+                    pDeleteAct = QAction(self.tr("Delete"), menu)
                     pDeleteAct.triggered.connect(self.on_delItemFromList)
                     menu.addAction(pDeleteAct)
 
                 if item.type() == "list" or item.type() == "dict":
-                    pExpandAct = QAction("展开全部", menu)
+                    pExpandAct = QAction(self.tr("Expand All"), menu)
                     pExpandAct.triggered.connect(self.on_actExpandAll)
                     menu.addAction(pExpandAct)
+
+                    pCollapseAct = QAction(self.tr("Collapse All"), menu)
+                    pCollapseAct.triggered.connect(self.on_actCollapseAll)
+                    # menu.addAction(pCollapseAct)
                 
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.type() == "list": 
-                        pRefAct = QAction("追加引用", menu)
+                        pRefAct = QAction(self.tr("Append Reference"), menu)
                         if item.key() == "InventorySlots":
-                            pEmptyRefAct = QAction("追加容器槽", menu)
+                            pEmptyRefAct = QAction(self.tr("Append Inventory Slot"), menu)
                             pEmptyRefAct.triggered.connect(self.on_addEmptyRefItem)
                             menu.addAction(pEmptyRefAct)
                     else:
-                        pRefAct = QAction("引用", menu)
+                        pRefAct = QAction(self.tr("Reference"), menu)
                     pRefAct.triggered.connect(self.on_addRefItem)
                     menu.addAction(pRefAct)
                 elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
@@ -198,47 +205,60 @@ class ItemGUI(QWidget, Ui_Item):
                     pass
                 else:
                     if item.depth() == 1:
-                        pCopyAct = QAction("复制模板并覆盖", menu)
+                        pCopyAct = QAction(self.tr("Copy Template and Overwrite"), menu)
                         pCopyAct.triggered.connect(self.on_copyItem)
                         menu.addAction(pCopyAct)
 
                         if item.type() == "list":
-                            pAddAct = QAction("追加模板项", menu)
+                            pAddAct = QAction(self.tr("Append Template Entries"), menu)
                             pAddAct.triggered.connect(self.on_addItemToList)
                             menu.addAction(pAddAct)
 
                     if item.type() == "dict":
-                        pCopyCollAct = QAction("复制收藏并覆盖", menu)
+                        pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
                         pCopyCollAct.triggered.connect(self.on_copyCollItem)
                         menu.addAction(pCopyCollAct)
                     
-                        pSaveAct = QAction("收藏", menu)
+                        pSaveAct = QAction(self.tr("Save Collection"), menu)
                         pSaveAct.triggered.connect(self.on_saveItem)
                         menu.addAction(pSaveAct)
 
                     if item.type() == "list":
-                        pNewAct = QAction("新建空白项", menu)
+                        pNewAct = QAction(self.tr("New Empty Entry"), menu)
                         pNewAct.triggered.connect(self.on_newItemToList)
                         menu.addAction(pNewAct)
 
-                        pNewAct = QAction("载入收藏", menu)
+                        pNewAct = QAction(self.tr("Load Collection"), menu)
                         pNewAct.triggered.connect(self.on_loadItem)
                         menu.addAction(pNewAct)
 
-                        pSaveListAct = QAction("收藏整个列表", menu)
+                        pSaveListAct = QAction(self.tr("Save List Collection"), menu)
                         pSaveListAct.triggered.connect(self.on_saveListItem)
                         menu.addAction(pSaveListAct)
 
-                        pNewListAct = QAction("载入整个列表收藏", menu)
+                        pNewListAct = QAction(self.tr("Load List Collection"), menu)
                         pNewListAct.triggered.connect(self.on_loadListItem)
                         menu.addAction(pNewListAct)
 
-                        pDelListAct = QAction("删除整个列表", menu)
+                        pDelListAct = QAction(self.tr("Delete Whole List"), menu)
                         pDelListAct.triggered.connect(self.on_delListItem)
                         menu.addAction(pDelListAct)
 
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
+
+    def CollapseChildren(self, index: QModelIndex) -> None:
+        if index.isValid():
+            for i in range(index.model().rowCount(index)):
+                child_index = index.child(i, 0)
+                self.CollapseChildren(child_index)
+            self.treeView.collapse(index)
+
+    @log_exception(True)
+    def on_actCollapseAll(self, checked: bool=False) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            self.CollapseChildren(index)
 
     @log_exception(True)
     def on_actExpandAll(self, checked: bool=False) -> None:
@@ -264,7 +284,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_delListItem(self, checked: bool=False) -> None:
-        reply = QMessageBox.question(self, '警告', '确定要删除整个列表吗', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.No)
+        reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Sure you want to delete the whole list?"), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.No)
         if reply == QMessageBox.Yes:
             index = self.treeView.currentIndex()
             self.model.removeAllListChild(index)
@@ -324,10 +344,10 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
         if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
-            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            QMessageBox.information(self, self.tr("Info"),self.tr("The related collection is empty, please add the collection first"))
             return
         self.loadCollection = CollectionGUI(item.field(), DataBase.AllCollection, self)
-        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+        self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection list"))
         self.loadCollection.exec_()
         
         name = self.loadCollection.lineEdit.text()
@@ -349,10 +369,10 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
         if item.field() not in DataBase.AllListCollection or len(DataBase.AllListCollection[item.field()]) == 0:
-            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            QMessageBox.information(self, self.tr("Info"), self.tr("The related collection is empty, please add the collection first"))
             return
         self.loadCollection = CollectionGUI(item.field(), DataBase.AllListCollection, self)
-        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+        self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection list"))
         self.loadCollection.exec_()
         
         name = self.loadCollection.lineEdit.text()
@@ -377,7 +397,7 @@ class ItemGUI(QWidget, Ui_Item):
 
         self.newSave = NewItemGUI(self)
         self.newSave.buttonBox.accepted.connect(lambda : self.on_newSaveButtonBoxAccepted(item))
-        self.newSave.setWindowTitle("添加" + item.field() + "类型收藏")
+        self.newSave.setWindowTitle(self.tr("Add ") + item.field() + self.tr(" type collection"))
         self.newSave.exec_()
 
     @log_exception(True)
@@ -392,7 +412,7 @@ class ItemGUI(QWidget, Ui_Item):
 
         self.newSaveList = NewItemGUI(self)
         self.newSaveList.buttonBox.accepted.connect(lambda : self.on_newSaveListButtonBoxAccepted(item))
-        self.newSaveList.setWindowTitle("添加" + item.field() + "[]类型收藏")
+        self.newSaveList.setWindowTitle(self.tr("Add ") + item.field() + self.tr("[] type collection"))
         self.newSaveList.exec_()
 
     @log_exception(True)
@@ -403,7 +423,7 @@ class ItemGUI(QWidget, Ui_Item):
         if item.field() not in DataBase.AllCollection:
             DataBase.AllCollection[item.field()] = {}
         if name in DataBase.AllCollection[item.field()]:
-            reply = QMessageBox.question(self, '警告', '是否覆盖同名收藏', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Cover the collection of the same name?"), QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
             if reply == QMessageBox.No:
                 return
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
@@ -416,7 +436,7 @@ class ItemGUI(QWidget, Ui_Item):
         if item.field() not in DataBase.AllListCollection:
             DataBase.AllListCollection[item.field()] = {}
         if name in DataBase.AllListCollection[item.field()]:
-            reply = QMessageBox.question(self, '警告', '是否覆盖同名收藏', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Cover the collection of the same name?"), QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
             if reply == QMessageBox.No:
                 return
         DataBase.AllListCollection[item.field()][name] = self.model.to_json(item)
@@ -456,10 +476,10 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
             if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
-                QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+                QMessageBox.information(self, self.tr("Info"), self.tr("The related collection is empty, please add the collection first"))
                 return
             self.loadCollection = CollectionGUI(item.field(), DataBase.AllCollection, self)
-            self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+            self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection"))
             self.loadCollection.exec_()
             
             name = self.loadCollection.lineEdit.text()

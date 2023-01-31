@@ -14,11 +14,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_NewItem(object):
     def setupUi(self, NewItem):
         NewItem.setObjectName("NewItem")
-        NewItem.resize(266, 87)
+        NewItem.resize(539, 93)
         self.gridLayout = QtWidgets.QGridLayout(NewItem)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem)
         self.label = QtWidgets.QLabel(NewItem)
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
@@ -39,5 +41,5 @@ class Ui_NewItem(object):
 
     def retranslateUi(self, NewItem):
         _translate = QtCore.QCoreApplication.translate
-        NewItem.setWindowTitle(_translate("NewItem", "Dialog"))
-        self.label.setText(_translate("NewItem", "输入名字"))
+        NewItem.setWindowTitle(_translate("NewItem", "New Mod"))
+        self.label.setText(_translate("NewItem", "Enter the name"))

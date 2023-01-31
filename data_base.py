@@ -17,8 +17,9 @@ class DataBase(object):
     DataDir = None
     RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
     # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
-    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter"]
-    SupportList = ["CardData", "CharacterPerk", "GameSourceModify", "GameStat", "Objective", "SelfTriggeredAction", "ScriptableObject", "PlayerCharacter"]
+    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter", "PerkGroup", "EndgameLogCategory", "PerkTabGroup"]
+    SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter", "PerkGroup", "EndgameLogCategory", "PerkTabGroup", \
+        "GameSourceModify", "ScriptableObject"]
 
     AllSpecialTypeField = {}
     AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup", "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData"]
@@ -344,7 +345,7 @@ class DataBase(object):
             for sub_key in DataBase.AllBaseJsonData[key].keys():
                 if  sub_key not in DataBase.AllCollection:
                     DataBase.AllCollection[sub_key] = {}
-                DataBase.AllCollection[sub_key]["默认空白项"] = DataBase.AllBaseJsonData[key][sub_key]
+                DataBase.AllCollection[sub_key]["Empty Default"] = DataBase.AllBaseJsonData[key][sub_key]
 
         if os.path.exists(DataBase.DataDir + r"/Mods/" + r"ListCollection.json"):
             with open(DataBase.DataDir + r"/Mods/" + r"ListCollection.json", "r", encoding='utf-8') as f:
@@ -352,7 +353,7 @@ class DataBase(object):
                             
     def saveCollection():
         temp_dict = copy.deepcopy(DataBase.AllCollection)
-        delete_keys_from_dict(temp_dict, "默认空白项")
+        delete_keys_from_dict(temp_dict, "Empty Default")
         with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllCollection, f)
 

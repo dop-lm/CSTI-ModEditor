@@ -40,5 +40,5 @@ class Ui_Item(object):
 
     def retranslateUi(self, Item):
         _translate = QtCore.QCoreApplication.translate
-        Item.setWindowTitle(_translate("Item", "文件"))
-        self.showInvalidButton.setText(_translate("Item", "PushButton"))
+        Item.setWindowTitle(_translate("Item", "File"))
+        self.showInvalidButton.setText(_translate("Item", "Turn off auto contents resize"))

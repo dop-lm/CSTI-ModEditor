@@ -18,7 +18,7 @@ def log_exception(MsgBox: bool=False):
             except Exception as ex:
                 msg = traceback.format_exc()
                 if MsgBox:
-                    QMessageBox.warning(None, "异常", msg, QMessageBox.Yes, QMessageBox.Yes)
+                    QMessageBox.warning(None, "Warning", msg, QMessageBox.Yes, QMessageBox.Yes)
                 QtCore.qWarning(bytes(msg, encoding="utf-8"))
         return inner_function
     return decorator

@@ -20,10 +20,10 @@ class ModifyItemGUI(ItemGUI):
     #override
     def addSpecialButton(self):
         if self.field == "CardData":
-            cardTagButton = QPushButton("添加匹配CardTag", self)
+            cardTagButton = QPushButton(self.tr("Add Match CardTag"), self)
             cardTagButton.clicked.connect(self.on_cardTagButton)
             self.horizontalLayout.insertWidget(2, cardTagButton)
-            cardTypeButton = QPushButton("设置匹配CardType", self)
+            cardTypeButton = QPushButton(self.tr("Add Match CardType"), self)
             cardTypeButton.clicked.connect(self.on_cardTypeButton)
             self.horizontalLayout.insertWidget(3, cardTypeButton)
 
@@ -59,7 +59,7 @@ class ModifyItemGUI(ItemGUI):
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
-            if hasattr(model, 'mapToSource'):
+            if hasattr(model, "mapToSource"):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
@@ -67,21 +67,25 @@ class ModifyItemGUI(ItemGUI):
             menu = QMenu(self.treeView)
             if item.parent() is not None:
                 if item.type() == "list" or item.type() == "dict":
-                    pExpandAct = QAction("展开全部", menu)
+                    pExpandAct = QAction(self.tr("Expand All"), menu)
                     pExpandAct.triggered.connect(self.on_actExpandAll)
                     menu.addAction(pExpandAct)
+
+                    pCollapseAct = QAction(self.tr("Collapse All"), menu)
+                    pCollapseAct.triggered.connect(self.on_actCollapseAll)
+                    # menu.addAction(pCollapseAct)
 
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
                         if item.type() == "list": 
-                            pRefAct = QAction("追加引用", menu)
+                            pRefAct = QAction(self.tr("Append Reference"), menu)
                         else:
-                            pRefAct = QAction("引用", menu)
+                            pRefAct = QAction(self.tr("Reference"), menu)
                         pRefAct.triggered.connect(self.on_addRefItem)
                         menu.addAction(pRefAct)
                     else:
                         if item.type() == "list":
-                            pModifyRefAct = QAction("添加引用", menu)
+                            pModifyRefAct = QAction(self.tr("Add Reference"), menu)
                             pModifyRefAct.triggered.connect(self.on_addAddRefItem)
                             menu.addAction(pModifyRefAct)
                 elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
@@ -92,56 +96,56 @@ class ModifyItemGUI(ItemGUI):
                     pass
                 elif item.key().endswith("WarpData"):
                     if item.type() == "list":
-                        pDelListAct = QAction("删除整个列表", menu)
+                        pDelListAct = QAction(self.tr("Delete Whole List"), menu)
                         pDelListAct.triggered.connect(self.on_delListItem)
                         menu.addAction(pDelListAct)
                 else:
                     if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
                         if item.parent().type() == "list":
-                            pDeleteAct = QAction("删除", menu)
+                            pDeleteAct = QAction(self.tr("Delete"), menu)
                             pDeleteAct.triggered.connect(self.on_delItemFromList)
                             menu.addAction(pDeleteAct)
 
                         if item.type() == "list":
-                            pNewAct = QAction("新建空白项", menu)
+                            pNewAct = QAction(self.tr("New Empty Entry"), menu)
                             pNewAct.triggered.connect(self.on_newItemToList)
                             menu.addAction(pNewAct)
 
-                            pNewAct = QAction("载入收藏", menu)
+                            pNewAct = QAction(self.tr("Load Collection"), menu)
                             pNewAct.triggered.connect(self.on_loadItem)
                             menu.addAction(pNewAct)
 
-                            pNewListAct = QAction("载入整个列表收藏", menu)
+                            pNewListAct = QAction(self.tr("Load List Collection"), menu)
                             pNewListAct.triggered.connect(self.on_loadListItem)
                             menu.addAction(pNewListAct)
 
-                            pDelListAct = QAction("删除整个列表", menu)
+                            pDelListAct = QAction(self.tr("Delete Whole List"), menu)
                             pDelListAct.triggered.connect(self.on_delListItem)
                             menu.addAction(pDelListAct)
                         
                         if item.type() == "dict":              
-                            pCopyCollAct = QAction("复制收藏并覆盖", menu)
+                            pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
                             pCopyCollAct.triggered.connect(self.on_copyCollItem)
                             menu.addAction(pCopyCollAct)
                     else:
                         if item.type() == "list":
-                            pNewAct = QAction("引用新建空白项", menu)
+                            pNewAct = QAction(self.tr("Reference New Empty Entry"), menu)
                             pNewAct.triggered.connect(self.on_addEmptyItem)
                             menu.addAction(pNewAct)
-                            pLoadAct = QAction("引用载入收藏", menu)
+                            pLoadAct = QAction(self.tr("Reference Load Collection"), menu)
                             pLoadAct.triggered.connect(self.on_loadCollItem)
                             menu.addAction(pLoadAct)
-                            pLoadListAct = QAction("引用载入整个列表收藏", menu)
+                            pLoadListAct = QAction(self.tr("Reference Load List Collection"), menu)
                             pLoadListAct.triggered.connect(self.on_loadCollListItem)
                             menu.addAction(pLoadListAct)
 
                     if item.type() == "list":
-                        pSaveListAct = QAction("收藏整个列表", menu)
+                        pSaveListAct = QAction(self.tr("Save List Collection"), menu)
                         pSaveListAct.triggered.connect(self.on_saveListItem)
                         menu.addAction(pSaveListAct)
                     
                     if item.type() == "dict":              
-                        pSaveAct = QAction("收藏", menu)
+                        pSaveAct = QAction(self.tr("Save Collection"), menu)
                         pSaveAct.triggered.connect(self.on_saveItem)
                         menu.addAction(pSaveAct)
             if len(menu.actions()):
@@ -152,15 +156,15 @@ class ModifyItemGUI(ItemGUI):
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
-            if hasattr(model, 'mapToSource'):
+            if hasattr(model, "mapToSource"):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
         if item.field() not in DataBase.AllCollection or len(DataBase.AllCollection[item.field()]) == 0:
-            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            QMessageBox.information(self, self.tr("Info"), self.tr("The related collection is empty, please add the collection first"))
             return
         self.loadCollection = CollectionGUI(item.field(), DataBase.AllCollection, self)
-        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+        self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection list"))
         self.loadCollection.exec_()
         
         name = self.loadCollection.lineEdit.text()
@@ -173,15 +177,15 @@ class ModifyItemGUI(ItemGUI):
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
-            if hasattr(model, 'mapToSource'):
+            if hasattr(model, "mapToSource"):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
         if item.field() not in DataBase.AllListCollection or len(DataBase.AllListCollection[item.field()]) == 0:
-            QMessageBox.information(self, '提示','相关收藏为空，请先添加收藏')
+            QMessageBox.information(self, self.tr("Info"), self.tr("The related collection is empty, please add the collection first"))
             return
         self.loadCollection = CollectionGUI(item.field(), DataBase.AllListCollection, self)
-        self.loadCollection.setWindowTitle(item.field() + "类型收藏列表")
+        self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection list"))
         self.loadCollection.exec_()
         
         name = self.loadCollection.lineEdit.text()
@@ -198,7 +202,7 @@ class ModifyItemGUI(ItemGUI):
         if item.field() not in DataBase.AllCollection:
             DataBase.AllCollection[item.field()] = {}
         if name in DataBase.AllCollection[item.field()]:
-            reply = QMessageBox.question(self, '警告', '是否覆盖同名收藏', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Cover the collection of the same name?"), QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
             if reply == QMessageBox.No:
                 return
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
@@ -208,7 +212,7 @@ class ModifyItemGUI(ItemGUI):
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
-            if hasattr(model, 'mapToSource'):
+            if hasattr(model, "mapToSource"):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
@@ -244,7 +248,7 @@ class ModifyItemGUI(ItemGUI):
     def addWarpItem(self, index: QModelIndex, mode: str, param: str = ""):
         if index.isValid():
             model = index.model()
-            if hasattr(model, 'mapToSource'):
+            if hasattr(model, "mapToSource"):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
@@ -265,7 +269,7 @@ class ModifyItemGUI(ItemGUI):
                     if warpDataItem is None:
                         if childItem.key() + "WarpType" in parentItem.mChilds:
                             if parentItem.mChilds[childItem.key() + "WarpType"].value() != 5:
-                                reply = QMessageBox.question(self, '警告', '存在其他类型的Warp，是否覆盖', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Presence of other types of Warp, whether to Overwrite"), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                                 if reply == QMessageBox.No:
                                     return  
                                 self.model.addModifyWarp(childIndex, srcItem=childItem)
@@ -295,7 +299,7 @@ class ModifyItemGUI(ItemGUI):
                         elif parentItem.type() == "dict":
                             if childItem.key() + "WarpType" in warpDataItem.mChilds:
                                 if warpDataItem.mChilds[childItem.key() + "WarpType"].value() != 5:
-                                    reply = QMessageBox.question(self, '警告', '存在其他类型的Warp，是否覆盖', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                    reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Presence of other types of Warp, whether to Overwrite"), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                                     if reply == QMessageBox.No:
                                         return
                                     self.model.addModifyWarp(warpDataIndex, srcItem=childItem, brother=False)
@@ -328,7 +332,7 @@ class ModifyItemGUI(ItemGUI):
                         else:
                             if childItem.key() + "WarpType" in parentItem.mChilds:
                                 if parentItem.mChilds[childItem.key() + "WarpType"].value() != 4:
-                                    reply = QMessageBox.question(self, '警告', '存在其他类型的Warp，是否覆盖', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                    reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Presence of other types of Warp, whether to Overwrite"), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                                     if reply == QMessageBox.No:
                                         return
                                     self.model.addAddWarp(childIndex, srcItem=childItem)
@@ -360,7 +364,7 @@ class ModifyItemGUI(ItemGUI):
                         else:
                             if childItem.key() + "WarpType" in warpDataItem.mChilds:
                                 if warpDataItem.mChilds[childItem.key() + "WarpType"].value() != 4:
-                                    reply = QMessageBox.question(self, '警告', '存在其他类型的Warp，是否覆盖', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                    reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Presence of other types of Warp, whether to Overwrite"), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                                     if reply == QMessageBox.No:
                                         return
                                     self.model.addAddWarp(warpDataIndex, srcItem=childItem, brother = False)

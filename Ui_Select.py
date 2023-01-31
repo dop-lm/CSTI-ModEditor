@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Select(object):
     def setupUi(self, Select):
         Select.setObjectName("Select")
-        Select.resize(458, 127)
+        Select.resize(458, 135)
         self.gridLayout = QtWidgets.QGridLayout(Select)
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -50,5 +50,5 @@ class Ui_Select(object):
 
     def retranslateUi(self, Select):
         _translate = QtCore.QCoreApplication.translate
-        Select.setWindowTitle(_translate("Select", "选择"))
-        self.label.setText(_translate("Select", "搜索框"))
+        Select.setWindowTitle(_translate("Select", "Select"))
+        self.label.setText(_translate("Select", "Search box"))

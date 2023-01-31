@@ -45,7 +45,7 @@ class CollectionGUI(QDialog, Ui_Collection):
         item = self.listWidget.currentItem()
         if item is not None:
             menu = QMenu(self.listWidget)
-            pDeleteAct = QAction("删除", menu)
+            pDeleteAct = QAction(self.tr("Delete"), menu)
             pDeleteAct.triggered.connect(self.on_delItem)
             menu.addAction(pDeleteAct)
             menu.popup(self.sender().mapToGlobal(pos))

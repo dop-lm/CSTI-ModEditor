@@ -42,5 +42,5 @@ class Ui_Collection(object):
 
     def retranslateUi(self, Collection):
         _translate = QtCore.QCoreApplication.translate
-        Collection.setWindowTitle(_translate("Collection", "Dialog"))
-        self.label.setText(_translate("Collection", "搜索框"))
+        Collection.setWindowTitle(_translate("Collection", "Collection"))
+        self.label.setText(_translate("Collection", "Search box"))

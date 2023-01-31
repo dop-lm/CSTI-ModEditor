@@ -12,6 +12,7 @@ import os
 import shutil
 import json
 import uuid
+import configparser
 # import anytree
 from myLogger import *
 from data_base import *
@@ -27,9 +28,14 @@ ModEditorVersion = "0.4.3"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
-        logInit(QDir.currentPath() + "/logoutput.log")
         super(ModEditorGUI, self).__init__(parent)
         self.setupUi(self)
+
+        self.trans = QTranslator()
+        logInit(os.path.join(QDir.currentPath(), "logoutput.log"))
+        self.loadConfig()
+        self.loadLanguage()        
+
         self.dataInit()
         self.ui_Init()
         self.mod_path = None
@@ -37,6 +43,25 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.file_model = None
         self.root_depth = 0
         self.tab_item_dict = {}
+
+    @log_exception(True)
+    def loadConfig(self):
+        self.config = configparser.ConfigParser()
+        self.config.read(os.path.join(QDir.currentPath(), "config.ini"))
+        self.language = self.config.get("Config", "Language")
+
+    @log_exception(True)
+    def loadLanguage(self):
+        if hasattr(self, "language") and self.language is not None and self.language:
+            self.trans.load(os.path.join(QDir.currentPath(), "Localization", self.language))
+            _app = QApplication.instance()
+            _app.installTranslator(self.trans)
+            self.retranslateUi(self)
+        else:
+            _app = QApplication.instance()
+            _app.removeTranslator(self.trans)
+            self.retranslateUi(self)
+
 
     def reset(self):
         self.mod_path = None
@@ -57,7 +82,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)
 
         self.autoresize = True
-        self.action_ResizeMode.setText("关闭自动内容展开")
+        self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
         
         width = QtWidgets.qApp.desktop().availableGeometry(self).width()
         self.splitter.setSizes([int(width * 1/8), int(width * 7/8)])
@@ -70,6 +95,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_ExportZip.triggered.connect(self.on_exportZip)
         self.action_ResizeMode.triggered.connect(self.on_ChangeCustomContextMenu)
 
+        self.actionChinese.triggered.connect(self.on_select_Chinese)
+        self.actionEnglish.triggered.connect(self.on_select_English)
+
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setMovable(True)
         self.tabWidget.tabCloseRequested.connect(self.on_tabWidgetTabCloseRequested)
@@ -79,7 +107,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.srcTitle = self.windowTitle() + " " + ModEditorVersion
         self.setWindowTitle(self.srcTitle)
 
-        self.pushButton.setText("打开")
         self.pushButton.clicked.connect(self.on_pushButtonClicked)
 
         self.quick_save = QShortcut(QKeySequence("Ctrl+S"), self)
@@ -90,13 +117,30 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
         self.lineEdit.returnPressed.connect(self.on_lineEditReturnPressed)
 
+    @log_exception(True)
+    def on_select_Chinese(self, checked: bool=False):
+        self.language = "zh_CN"
+        self.config.set("Config", "Language", self.language)
+        with open(os.path.join(QDir.currentPath(), "config.ini"), "w") as f:
+            self.config.write(f)
+        self.loadLanguage()
+    
+    @log_exception(True)
+    def on_select_English(self, checked: bool=False):
+        self.language = ""
+        self.config.set("Config", "Language", self.language)
+        with open(os.path.join(QDir.currentPath(), "config.ini"), "w") as f:
+            self.config.write(f)
+        self.loadLanguage()
+
+    @log_exception(True)
     def on_ChangeCustomContextMenu(self, checked: bool=False):
         if self.autoresize:
             self.autoresize = False
-            self.action_ResizeMode.setText("打开自动内容展开")
+            self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
         else:
             self.autoresize = True
-            self.action_ResizeMode.setText("关闭自动内容展开")
+            self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
 
     @log_exception(True)
     def treeItemRenamed(self, path: str, old_file: str, new_file: str):
@@ -125,19 +169,19 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 tab = i
                 break
         if tab >= 0:
-            pCloseNowAct = QAction("关闭当前页（自动保存）", pmenu)
+            pCloseNowAct = QAction(self.tr("Close(Auto-Save)"), pmenu)
             pCloseNowAct.triggered.connect(lambda: self.on_closeNow(tab))
             pmenu.addAction(pCloseNowAct)
 
-            pCloseRightAct = QAction("关闭右侧页（自动保存）", pmenu)
+            pCloseRightAct = QAction(self.tr("Close to the Right(Auto-Save)"), pmenu)
             pCloseRightAct.triggered.connect(lambda: self.on_closeRight(tab))
             pmenu.addAction(pCloseRightAct)
 
-            pCloseAllExAct = QAction("关闭除此之外所有页（自动保存）", pmenu)
+            pCloseAllExAct = QAction(self.tr("Close Others(Auto-Save)"), pmenu)
             pCloseAllExAct.triggered.connect(lambda: self.on_closeAllEx(tab))
             pmenu.addAction(pCloseAllExAct)
 
-            pCloseAllAct = QAction("关闭所有页（自动保存）", pmenu)
+            pCloseAllAct = QAction(self.tr("Close All(Auto-Save)"), pmenu)
             pCloseAllAct.triggered.connect(lambda: self.on_closeAll(tab))
             pmenu.addAction(pCloseAllAct)
         if len(pmenu.actions()):
@@ -190,7 +234,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.on_tabWidgetTabCloseRequested(index)
         
     def closeEvent(self, event) -> None:
-        reply = QMessageBox.question(self, '保存', '是否在退出前保存(收藏、子菜单、本地化)', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+        reply = QMessageBox.question(self, self.tr('Save'), self.tr('Save the changes before exit?(Collection, Localization, Opened files...)'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.on_saveMod()
             event.accept()
@@ -213,13 +257,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 elif depth == 1:
                     if file_name in DataBase.SupportList:
                         if file_name == "GameSourceModify":
-                            pAddAct = QAction("新建修改", pmenu)
+                            pAddAct = QAction(self.tr("New Modify"), pmenu)
                             pAddAct.triggered.connect(self.on_newModify)
                             pmenu.addAction(pAddAct)
                         elif file_name == "ScriptableObject":
                             pass
                         else:
-                            pAddAct = QAction("新建", pmenu)
+                            pAddAct = QAction(self.tr("New File"), pmenu)
                             pAddAct.triggered.connect(self.on_newCard)
                             pmenu.addAction(pAddAct)
                 elif depth == 2:
@@ -229,13 +273,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     top_name = self.file_model.fileName(top_parent)
                     if top_name == "ScriptableObject":
                         if self.file_model.isDir(index) and file_name in DataBase.AllRef:
-                            pAddAct = QAction("新建", pmenu)
+                            pAddAct = QAction(self.tr("New File"), pmenu)
                             pAddAct.triggered.connect(self.on_newScriptableObject)
                             pmenu.addAction(pAddAct)
                     elif top_name == "GameSourceModify":
                         pass
                     else:
-                        pAddAct = QAction("新建", pmenu)
+                        pAddAct = QAction(self.tr("New File"), pmenu)
                         pAddAct.triggered.connect(self.on_newCard)
                         pmenu.addAction(pAddAct)
                 else:
@@ -247,13 +291,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         if top_name == "GameSourceModify" or top_name == "ScriptableObject":
                             pass
                         else:
-                            pAddAct = QAction("新建", pmenu)
+                            pAddAct = QAction(self.tr("New File"), pmenu)
                             pAddAct.triggered.connect(self.on_newCard)
                             pmenu.addAction(pAddAct)
             if depth > 1:
                 if not self.file_model.isDir(index) and file_name.endswith(".json"):
                     if not file_path in self.tab_item_dict:
-                        pDeleteAct = QAction("删除", pmenu)
+                        pDeleteAct = QAction(self.tr("Delete"), pmenu)
                         pDeleteAct.triggered.connect(self.on_delCard)
                         pmenu.addAction(pDeleteAct)
             if len(pmenu.actions()):
@@ -284,7 +328,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                             with open(card_path, "w") as f:
                                 f.write(temp_data)
                         else:
-                            QMessageBox.warning(self, '警告','存在同名文件')
+                            QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
                 except Exception as ex:
                     QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
                 self.init_completer()
@@ -319,7 +363,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                             with open(card_path, "w") as f:
                                 f.write(temp_data)
                         else:
-                            QMessageBox.warning(self, '警告','存在同名文件')
+                            QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
                 except Exception as ex:
                     QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
                 self.init_completer()
@@ -361,7 +405,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                 with open(card_path, "w") as f:
                                     f.write("{\n\n}")
                             else:
-                                QMessageBox.warning(self, '警告','存在同名文件')
+                                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
                 except Exception as ex:
                     QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
                 self.init_completer()
@@ -376,7 +420,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if top_parent is None:
                 return
             top_name = self.file_model.fileName(top_parent)
-            reply = QMessageBox.question(self,'警告','确定要删除' + top_name + ":" + file_name + '吗', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            reply = QMessageBox.question(self, self.tr("Warning"), self.tr('Make sure to delete ') + top_name + ":" + file_name + '?', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
             if reply == QMessageBox.Yes:
                 if self.file_model.isDir(index):
                     shutil.rmtree(file_path)
@@ -403,7 +447,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def on_tabWidgetTabCloseRequested(self, index: int, ask: bool = True):
         if ask:
-            reply = QMessageBox.question(self, '保存', '是否在退出前保存', QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            reply = QMessageBox.question(self, self.tr('Save'), self.tr('Save the changes before exit?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
         else:
             reply = QMessageBox.Yes
         item = self.tabWidget.widget(index)
@@ -510,7 +554,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def on_newMod(self, checked: bool=False):
         if self.tab_item_dict:
-            QMessageBox.warning(self, '警告','请先关闭所有子菜单')
+            QMessageBox.warning(self, self.tr("Warning"), self.tr('Please close all opened files first'))
             return
         self.new_mod = NewItemGUI.NewItemGUI(self)
         self.new_mod.buttonBox.accepted.connect(self.on_newModButtonBoxAccepted)
@@ -522,7 +566,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if not mod_name:
             return
         if os.path.exists(QDir.currentPath() + r"/Mods/" + mod_name):
-            QMessageBox.warning(self, '警告','存在同名Mod文件夹')
+            QMessageBox.warning(self, self.tr("Warning"), self.tr('Mod folder with the same name exists'))
             return
         shutil.copytree(QDir.currentPath() + r"/CSTI-JsonData/BaseMod", QDir.currentPath() + r"/Mods/" + mod_name)
         self.loadMod(QDir.currentPath() + r"/Mods/" + mod_name)
@@ -547,13 +591,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def on_loadMod(self, checked: bool=False):
         if self.tab_item_dict:
-            QMessageBox.warning(self, '警告','请先关闭所有子菜单')
+            QMessageBox.warning(self, self.tr("Warning"), self.tr('Please close all opened files first'))
             return
-        mod_path = QFileDialog.getExistingDirectory(self, caption='选择Mod文件夹', directory=QDir.currentPath())
+        mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'), directory=QDir.currentPath())
         if mod_path is None or mod_path == "":
             return
         if "ModInfo.json" not in os.listdir(mod_path):
-            QMessageBox.warning(self, '警告','不是一个有效的Mod文件夹')
+            QMessageBox.warning(self, self.tr("Warning"), self.tr('Not a valid Mod folder'))
             return
         self.loadMod(mod_path)
 

@@ -30,7 +30,7 @@
           <item>
            <widget class="QPushButton" name="pushButton">
             <property name="text">
-             <string>PushButton</string>
+             <string>Open</string>
             </property>
            </widget>
           </item>
@@ -61,7 +61,7 @@
    </property>
    <widget class="QMenu" name="menu">
     <property name="title">
-     <string>文件</string>
+     <string>File</string>
     </property>
     <addaction name="action_newMod"/>
     <addaction name="action_loadMod"/>
@@ -70,9 +70,17 @@
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
-     <string>设置</string>
+     <string>Setting</string>
     </property>
+    <widget class="QMenu" name="menuLanguage">
+     <property name="title">
+      <string>Language</string>
+     </property>
+     <addaction name="actionChinese"/>
+     <addaction name="actionEnglish"/>
+    </widget>
     <addaction name="action_ResizeMode"/>
+    <addaction name="menuLanguage"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -80,27 +88,40 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_newMod">
    <property name="text">
-    <string>新建Mod项目</string>
+    <string>New Mod Project</string>
    </property>
   </action>
   <action name="action_loadMod">
    <property name="text">
-    <string>导入Mod项目</string>
+    <string>Load Mod Project</string>
    </property>
   </action>
   <action name="action_save">
    <property name="text">
-    <string>保存</string>
+    <string>Save Mod Project</string>
    </property>
   </action>
   <action name="action_ResizeMode">
    <property name="text">
-    <string>关闭自动内容展开</string>
+    <string>Turn off auto contents resize</string>
    </property>
   </action>
   <action name="action_ExportZip">
    <property name="text">
-    <string>导出Zip格式</string>
+    <string>Export Mod as Zip Format</string>
+   </property>
+   <property name="toolTip">
+    <string>Export Mod as Zip Format</string>
+   </property>
+  </action>
+  <action name="actionChinese">
+   <property name="text">
+    <string>Chinese</string>
+   </property>
+  </action>
+  <action name="actionEnglish">
+   <property name="text">
+    <string>English</string>
    </property>
   </action>
  </widget>

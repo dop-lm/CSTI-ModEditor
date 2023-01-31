@@ -22,30 +22,30 @@ class SelectGUI(QDialog, Ui_Select):
         self.field_name = field_name
         self.write_flag = False
         self.modify_type = None
-        self.setWindowTitle("添加" + field_name + "引用类型")
+        self.setWindowTitle(self.tr("Add ") + field_name + self.tr(" Reference Type"))
 
         if type == SelectGUI.NewData:
-            self.setWindowTitle("选择一个" + field_name + "模板")
-            label = QLabel("卡片名字", self)
+            self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Template"))
+            label = QLabel(self.tr("Name"), self)
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
 
         if type == SelectGUI.NewModify:
-            self.setWindowTitle("选择一个" + field_name + "对象")
-            label = QLabel("名字", self)
+            self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Object"))
+            label = QLabel(self.tr("Name"), self)
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
 
         if type == SelectGUI.Copy:
-            self.setWindowTitle("复制" + field_name + "属性")
+            self.setWindowTitle(self.tr("Copy ") + field_name + self.tr(" Entries"))
 
         if type == SelectGUI.Append:
-            self.setWindowTitle("追加" + field_name + "属性")
+            self.setWindowTitle(self.tr("Append ") + field_name + self.tr(" Entries"))
 
         if type == SelectGUI.Special:
-            self.setWindowTitle("添加特殊属性")
+            self.setWindowTitle(self.tr("Add Special Entry"))
 
         try:
             if self.field_name == "CardData":

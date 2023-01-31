@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>458</width>
-    <height>127</height>
+    <height>135</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>选择</string>
+   <string>Select</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -32,7 +32,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>搜索框</string>
+        <string>Search box</string>
        </property>
       </widget>
      </item>
