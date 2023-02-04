@@ -412,15 +412,27 @@ class DataBase(object):
     def loadNote():
         if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/Notes'):
             for file in os.listdir(DataBase.DataDir + r'/CSTI-JsonData/Notes'):
-                if file.endswith(".txt"):
-                    DataBase.AllNotes[file[:-4]] = {}
-                    with open(DataBase.DataDir + r'/CSTI-JsonData/Notes/' + file, "r", encoding='utf-8') as f:
-                        lines = f.readlines()
-                        for line in lines:
-                            line = line.replace("\n", "")
-                            items = line.split("\t")
-                            if len(items) == 2:
-                                DataBase.AllNotes[file[:-4]][items[0]] = items[1]
+                try:
+                    if file.endswith(".txt"):
+                        if file[:-4] not in DataBase.AllNotes:
+                            DataBase.AllNotes[file[:-4]] = {}
+                        with open(DataBase.DataDir + r'/CSTI-JsonData/Notes/' + file, "r", encoding='utf-8') as f:
+                            lines = f.readlines()
+                            for line in lines:
+                                line = line.replace("\n", "")
+                                items = line.split("\t")
+                                if len(items) == 2:
+                                    DataBase.AllNotes[file[:-4]][items[0]] = items[1]
+                    elif file.endswith(".json"):
+                        if file[:-5] not in DataBase.AllNotes:
+                            DataBase.AllNotes[file[:-5]] = {}
+                        with open(DataBase.DataDir + r'/CSTI-JsonData/Notes/' + file, "r", encoding='utf-8') as f:
+                            data = json.load(f)
+                            for key, item in data.items():
+                                if type(item) == str:
+                                    DataBase.AllNotes[file[:-5]][key] = item
+                except Exception as ex:
+                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     # def loadTemplate():
     #     DataBase.AllTemplateBase = {}

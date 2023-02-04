@@ -134,8 +134,8 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addItem(QModelIndex(), "VisibleGameStatStatListTab", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def loadJsonData(self, json_data):
-        self.model = QJsonModel(self.field)
+    def loadJsonData(self, json_data, is_modify: bool=False):
+        self.model = QJsonModel(self.field, is_modify=is_modify)
         self.model.loadJson(json_data)
         self.proxy_model = QJsonProxyModel(self.treeView)
         self.proxy_model.setSourceModel(self.model)
@@ -188,6 +188,11 @@ class ItemGUI(QWidget, Ui_Item):
                     pCollapseAct = QAction(self.tr("Collapse All"), menu)
                     pCollapseAct.triggered.connect(self.on_actCollapseAll)
                     # menu.addAction(pCollapseAct)
+
+                if item.type() == "list" and item.field() == "WarpRef":
+                    pDelListAct = QAction(self.tr("Delete Whole List"), menu)
+                    pDelListAct.triggered.connect(self.on_delListItem)
+                    menu.addAction(pDelListAct)
                 
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.type() == "list": 
@@ -502,7 +507,13 @@ class ItemGUI(QWidget, Ui_Item):
             select.exec_()
 
             if select.write_flag:
-                if item.field() in DataBase.RefGuidList:
+                if select.lineEdit.text() == "":
+                    if item.type() == "list":
+                        reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Sure you want to delete the whole list?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+                        if reply != QMessageBox.Yes:
+                            return
+                    self.model.addRefWarp(index, select.lineEdit.text())
+                elif item.field() in DataBase.RefGuidList:
                     if item.field() == "CardData":
                         if select.lineEdit.text() in DataBase.AllCardData:
                             self.model.addRefWarp(index, DataBase.AllCardData[select.lineEdit.text()])
@@ -514,7 +525,12 @@ class ItemGUI(QWidget, Ui_Item):
                 elif item.field() in DataBase.RefNameList:
                     self.model.addRefWarp(index, select.lineEdit.text())
                 elif item.field() == "ScriptableObject":
-                    self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
+                    if select.lineEdit.text() in DataBase.AllScriptableObject:
+                        self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
+                    else:
+                        reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Add an object that does not belong to this Mod (possibly a Tag)?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+                        if reply == QMessageBox.Yes:
+                            self.model.addRefWarp(index, select.lineEdit.text())
                     return
 
     @log_exception(True)

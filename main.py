@@ -24,7 +24,7 @@ import ExportToZip
 from glob import glob
 from functools import partial
 
-ModEditorVersion = "0.4.3"
+ModEditorVersion = "0.4.5"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -517,7 +517,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     template_json = json.load(f)
                     self.loopDelGameSourceModifyTemplateWarpper(template_json)
                 src_json.update(template_json)
-                item.loadJsonData(json.dumps(src_json).encode("utf-8"))
+                item.loadJsonData(json.dumps(src_json).encode("utf-8"), is_modify=True)
             elif top_name in DataBase.RefGuidList:
                 item = ItemGUI.ItemGUI(field=top_name, auto_resize=self.autoresize, key=tab_key, parent=self.tabWidget)
                 with open(file_path, 'rb') as f:
