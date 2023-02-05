@@ -24,7 +24,7 @@ import ExportToZip
 from glob import glob
 from functools import partial
 
-ModEditorVersion = "0.4.5"
+ModEditorVersion = "0.4.6"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -347,26 +347,27 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 group_name = top_name
                 select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewData)
                 select.exec_()
-                template_key = select.lineEdit.text()
-                if select.lineEdit.text().rfind("(") >= 0:
-                    template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
-                try:
-                    card_name = select.name_editor.text()
-                    if card_name and template_key:
-                        card_path = file_path + "/" + card_name + ".json"
-                        if not os.path.exists(card_path):
-                            with open(DataBase.AllPath[group_name][template_key], "r") as f:
-                                temp_data = f.read(-1)
-                            temp_json = json.loads(temp_data)
-                            guid = temp_json["UniqueID"]
-                            temp_data = temp_data.replace(guid, str(uuid.uuid1()).replace("-",""))
-                            with open(card_path, "w") as f:
-                                f.write(temp_data)
-                        else:
-                            QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
-                except Exception as ex:
-                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-                self.init_completer()
+                if select.write_flag:
+                    template_key = select.lineEdit.text()
+                    if select.lineEdit.text().rfind("(") >= 0:
+                        template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
+                    try:
+                        card_name = select.name_editor.text()
+                        if card_name and template_key:
+                            card_path = file_path + "/" + card_name + ".json"
+                            if not os.path.exists(card_path):
+                                with open(DataBase.AllPath[group_name][template_key], "r") as f:
+                                    temp_data = f.read(-1)
+                                temp_json = json.loads(temp_data)
+                                guid = temp_json["UniqueID"]
+                                temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-",""))
+                                with open(card_path, "w") as f:
+                                    f.write(temp_data)
+                            else:
+                                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+                    except Exception as ex:
+                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+                    self.init_completer()
 
     @log_exception(True)
     def on_newModify(self, checked: bool=False) -> None:
@@ -382,33 +383,34 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 group_name = top_name
                 select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewModify)
                 select.exec_()
-                target_key = select.lineEdit.text()
-                try:
-                    dir_name = select.name_editor.text()
-                    if dir_name and target_key:
-                        target_group_name = ""
-                        target_guid = DataBase.AllGuidPlain[target_key]
-                        for type_key in DataBase.AllRef["CardData"].keys():
-                            if target_key in DataBase.AllRef["CardData"][type_key]:
-                                target_group_name = "CardData"
-                                break
-                        for group_key in DataBase.AllGuid.keys():
-                            if target_key in DataBase.AllGuid[group_key]:
-                                target_group_name = group_key
-                                break
-                        if target_group_name and target_guid:    
-                            card_dir = file_path + "/" + dir_name
-                            card_path = file_path + "/" + dir_name + "/" + target_guid + ".json"
-                            if not os.path.exists(card_dir):
-                                os.mkdir(card_dir)
-                            if not os.path.exists(card_path):                                    
-                                with open(card_path, "w") as f:
-                                    f.write("{\n\n}")
-                            else:
-                                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
-                except Exception as ex:
-                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-                self.init_completer()
+                if select.write_flag:
+                    target_key = select.lineEdit.text()
+                    try:
+                        dir_name = select.name_editor.text()
+                        if dir_name and target_key:
+                            target_group_name = ""
+                            target_guid = DataBase.AllGuidPlain[target_key]
+                            for type_key in DataBase.AllRef["CardData"].keys():
+                                if target_key in DataBase.AllRef["CardData"][type_key]:
+                                    target_group_name = "CardData"
+                                    break
+                            for group_key in DataBase.AllGuid.keys():
+                                if target_key in DataBase.AllGuid[group_key]:
+                                    target_group_name = group_key
+                                    break
+                            if target_group_name and target_guid:    
+                                card_dir = file_path + "/" + dir_name
+                                card_path = file_path + "/" + dir_name + "/" + target_guid + ".json"
+                                if not os.path.exists(card_dir):
+                                    os.mkdir(card_dir)
+                                if not os.path.exists(card_path):                                    
+                                    with open(card_path, "w") as f:
+                                        f.write("{\n\n}")
+                                else:
+                                    QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+                    except Exception as ex:
+                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+                    self.init_completer()
 
     @log_exception(True)
     def on_delCard(self, checked: bool=False) -> None:
