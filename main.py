@@ -22,9 +22,10 @@ import ModifyItemGUI
 import SelectGUI
 import ExportToZip
 from glob import glob
+from pathlib import Path
 from functools import partial
 
-ModEditorVersion = "0.4.6"
+ModEditorVersion = "0.4.7"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -45,10 +46,27 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.tab_item_dict = {}
 
     @log_exception(True)
+    def saveConfig(self):
+        with open(os.path.join(QDir.currentPath(), "config.ini"), "w") as f:
+            self.config.write(f)
+
+    @log_exception(True)
     def loadConfig(self):
         self.config = configparser.ConfigParser()
         self.config.read(os.path.join(QDir.currentPath(), "config.ini"))
-        self.language = self.config.get("Config", "Language")
+        if self.config.has_option("Config", "Language"):
+            self.language = self.config.get("Config", "Language")
+        else:
+            self.language = ""
+            self.config.set("Config", "Language", self.language)
+            self.saveConfig()
+        
+        if self.config.has_option("Config", "LastOpenDir"):
+            self.last_open_dir = self.config.get("Config", "LastOpenDir")
+        else:
+            self.last_open_dir = ""
+            self.config.set("Config", "LastOpenDir", self.last_open_dir)
+            self.saveConfig()
 
     @log_exception(True)
     def loadLanguage(self):
@@ -121,16 +139,14 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def on_select_Chinese(self, checked: bool=False):
         self.language = "zh_CN"
         self.config.set("Config", "Language", self.language)
-        with open(os.path.join(QDir.currentPath(), "config.ini"), "w") as f:
-            self.config.write(f)
+        self.saveConfig()
         self.loadLanguage()
     
     @log_exception(True)
     def on_select_English(self, checked: bool=False):
         self.language = ""
         self.config.set("Config", "Language", self.language)
-        with open(os.path.join(QDir.currentPath(), "config.ini"), "w") as f:
-            self.config.write(f)
+        self.saveConfig()
         self.loadLanguage()
 
     @log_exception(True)
@@ -443,7 +459,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
         with open(item.tab_key, "w") as f:
-            json.dump(save_data, f, indent = 4)
+            json.dump(save_data, f, sort_keys=True, indent = 4)
         DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
     
     @log_exception(True)
@@ -519,17 +535,17 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     template_json = json.load(f)
                     self.loopDelGameSourceModifyTemplateWarpper(template_json)
                 src_json.update(template_json)
-                item.loadJsonData(json.dumps(src_json).encode("utf-8"), is_modify=True)
+                item.loadJsonData(src_json, is_modify=True)
             elif top_name in DataBase.RefGuidList:
                 item = ItemGUI.ItemGUI(field=top_name, auto_resize=self.autoresize, key=tab_key, parent=self.tabWidget)
-                with open(file_path, 'rb') as f:
-                    item.loadJsonData(f.read(-1))
+                with open(file_path, 'r') as f:
+                    item.loadJsonData(json.load(f))
             elif top_name == "ScriptableObject":
                 top2nd_parent = self.getDepthParent(index, depth=2)
                 top2nd_name = self.file_model.fileName(top2nd_parent)
                 item = ItemGUI.ItemGUI(field=top2nd_name, auto_resize=self.autoresize, key=tab_key, parent=self.tabWidget)
-                with open(file_path, 'rb') as f:
-                    item.loadJsonData(f.read(-1))
+                with open(file_path, 'r') as f:
+                    item.loadJsonData(json.load(f))
             else:
                 print("openTreeViewItem Unexport Type")
                 return
@@ -579,7 +595,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             for i in range(self.tabWidget.count()):
                 self.saveTabJsonItem(i)
             with open(self.mod_path + "/ModInfo.json", "w") as f:
-                json.dump(self.mod_info, f, indent = 4)
+                json.dump(self.mod_info, f, sort_keys=True, indent = 4)
             DataBase.saveCollection()
             DataBase.saveModSimpCn(self.mod_path)
             DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
@@ -595,12 +611,18 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if self.tab_item_dict:
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Please close all opened files first'))
             return
-        mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'), directory=QDir.currentPath())
+        if self.last_open_dir == "":
+            mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'), directory=QDir.currentPath())
+        else:
+            mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'), directory=self.last_open_dir)
         if mod_path is None or mod_path == "":
             return
         if "ModInfo.json" not in os.listdir(mod_path):
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Not a valid Mod folder'))
             return
+        self.last_open_dir = str(Path(mod_path).parent.absolute())
+        self.config.set("Config", "LastOpenDir", self.last_open_dir)
+        self.saveConfig()
         self.loadMod(mod_path)
 
     def loadMod(self, mod_path):

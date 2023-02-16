@@ -123,6 +123,9 @@ class SelectGUI(QDialog, Ui_Select):
             elif self.field_name == "ItemCardDataCardTabGpGroup":
                 self.comboBox.addItems(DataBase.AllItemTabGpGroup)
                 self.m_completer = QCompleter(DataBase.AllItemTabGpGroup, self)
+            elif self.field_name == "CardDataCardFilterGroup":
+                self.comboBox.addItems(DataBase.AllCardFilterGroup)
+                self.m_completer = QCompleter(DataBase.AllCardFilterGroup, self)
             elif self.field_name == "CharacterPerkPerkGroup":
                 self.comboBox.addItems(DataBase.AllRef["PerkGroup"])
                 self.m_completer = QCompleter(DataBase.AllRef["PerkGroup"], self)

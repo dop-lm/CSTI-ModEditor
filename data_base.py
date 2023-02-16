@@ -22,7 +22,7 @@ class DataBase(object):
         "GameSourceModify", "ScriptableObject"]
 
     AllSpecialTypeField = {}
-    AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup", "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData"]
+    AllSpecialTypeField["CardData"] = ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup", "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData", "CardDataCardFilterGroup"]
     AllSpecialTypeField["CharacterPerk"] = ["CharacterPerkPerkGroup"]
     AllSpecialTypeField["GameStat"] = ["VisibleGameStatStatListTab"]
     AllSpecialTypeField["CardTabGroup"] = ["BlueprintCardDataCardTabGroup"]
@@ -31,6 +31,7 @@ class DataBase(object):
     AllBlueprintTab = []
     AllBlueprintSubTab = []
     AllItemTabGpGroup = []
+    AllCardFilterGroup = []
 
     AllEnum = {}
     AllEnumRev = {}
@@ -201,6 +202,8 @@ class DataBase(object):
                                 DataBase.AllBlueprintSubTab.append(item)
                         if item.startswith("GpTag_"):
                             DataBase.AllItemTabGpGroup.append(item)
+                if file[:-4] == "CardFilterGroup":
+                    DataBase.AllCardFilterGroup.extend(temp)
 
         if "WeatherParticles" in DataBase.AllRefBase and "WeatherSpecialEffect" in DataBase.AllRefBase:
             DataBase.AllRefBase["WeatherSpecialEffect"].extend(copy.deepcopy(DataBase.AllRefBase["WeatherParticles"]))
@@ -254,7 +257,10 @@ class DataBase(object):
                                 DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
                                 DataBase.AllGuidPlainBase.update(temp)
                                 DataBase.AllScriptableObjectBase.update(temp)
+        except Exception as ex:
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
+        try:
             for mod_ref_dir in os.listdir(DataBase.DataDir + r"/Mods/ModReference/"):
                 if os.path.isdir(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir):
                     for file in os.listdir(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):

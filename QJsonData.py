@@ -179,17 +179,17 @@ class QJsonTreeItem(object):
         else:
             rootItem.setDepth(parent.depth() + 1)
 
-        try:
-            value = value.toVariant()
-            jsonType = value.type()
-        except AttributeError:
-            pass
+        # try:
+        #     value = value.toVariant()
+        #     jsonType = value.type()
+        # except AttributeError:
+        #     pass
 
-        try:
-            value = value.toObject()
-            jsonType = value.type()
-        except AttributeError:
-            pass
+        # try:
+        #     value = value.toObject()
+        #     jsonType = value.type()
+        # except AttributeError:
+        #     pass
 
         if isinstance(value, dict):
             rootItem.setType(dict)
@@ -374,17 +374,18 @@ class QJsonModel(QAbstractItemModel):
         self.root_field = root_field
         self.is_modify = is_modify
 
-    def loadJson(self, json):
-        error = QJsonParseError()
-        self.mDocument = QJsonDocument.fromJson(json, error)
-        if self.mDocument is not None:
+    def loadJson(self, json_data:dict):
+        # error = QJsonParseError()
+        # self.mDocument = QJsonDocument.fromJson(json, error)
+        if json_data is not None:
             self.beginResetModel()
-            if self.mDocument.isArray():
-                self.mRootItem.setType(list)
-                self.mRootItem = QJsonTreeItem.load(list(self.mDocument.array()), self.root_field)
-            else:
+            if isinstance(json_data, dict):
                 self.mRootItem.setType(dict)
-                self.mRootItem = QJsonTreeItem.load(self.mDocument.object(), self.root_field)
+                self.mRootItem = QJsonTreeItem.load(json_data, self.root_field)
+            else:
+                raise "Error Json Type"
+                # self.mRootItem.setType(dict)
+                # self.mRootItem = QJsonTreeItem.load(self.mDocument.object(), self.root_field)
             self.loopSetWarpField(self.mRootItem, self.mRootItem)
             self.endResetModel()
             return True

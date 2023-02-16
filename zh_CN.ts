@@ -32,7 +32,7 @@
     <message>
         <location filename="Ui_Item.py" line="44"/>
         <source>PushButton</source>
-        <translation type="obsolete">按钮</translation>
+        <translation>按钮</translation>
     </message>
     <message>
         <location filename="Ui_Item.py" line="44"/>
@@ -43,12 +43,12 @@
 <context>
     <name>ItemGUI</name>
     <message>
-        <location filename="ItemGUI.py" line="153"/>
+        <location filename="ItemGUI.py" line="174"/>
         <source>Show invalid entries</source>
         <translation>显示未激活属性</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="63"/>
+        <location filename="ItemGUI.py" line="66"/>
         <source>Add blueprint main group</source>
         <translation>添加蓝图主分组</translation>
     </message>
@@ -68,149 +68,154 @@
         <translation>添加所属类型组</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="55"/>
+        <location filename="ItemGUI.py" line="58"/>
         <source>Add perk exclusive group</source>
         <translation>添加特性互斥组</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="59"/>
+        <location filename="ItemGUI.py" line="62"/>
         <source>Add displayable status group</source>
         <translation>添加可显示状态分组</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="67"/>
+        <location filename="ItemGUI.py" line="70"/>
         <source>Add character journal</source>
         <translation>添加角色剧本</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="149"/>
+        <location filename="ItemGUI.py" line="170"/>
         <source>Hide invalid entries</source>
         <translation>隐藏未激活属性</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="179"/>
+        <location filename="ItemGUI.py" line="200"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="184"/>
+        <location filename="ItemGUI.py" line="205"/>
         <source>Expand All</source>
         <translation>展开全部</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="188"/>
+        <location filename="ItemGUI.py" line="209"/>
         <source>Collapse All</source>
         <translation>折叠全部</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="199"/>
+        <location filename="ItemGUI.py" line="220"/>
         <source>Append Reference</source>
         <translation>追加引用</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="201"/>
+        <location filename="ItemGUI.py" line="222"/>
         <source>Append Inventory Slot</source>
         <translation>追加容器槽</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="205"/>
+        <location filename="ItemGUI.py" line="226"/>
         <source>Reference</source>
         <translation>引用</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="213"/>
+        <location filename="ItemGUI.py" line="234"/>
         <source>Copy Template and Overwrite</source>
         <translation>复制模板并覆盖</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="218"/>
+        <location filename="ItemGUI.py" line="239"/>
         <source>Append Template Entries</source>
         <translation>追加模板项</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="223"/>
+        <location filename="ItemGUI.py" line="244"/>
         <source>Copy Collection and Overwrite</source>
         <translation>复制收藏并覆盖</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="227"/>
+        <location filename="ItemGUI.py" line="248"/>
         <source>Save Collection</source>
         <translation>保存收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="232"/>
+        <location filename="ItemGUI.py" line="253"/>
         <source>New Empty Entry</source>
         <translation>新建空白项</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="236"/>
+        <location filename="ItemGUI.py" line="257"/>
         <source>Load Collection</source>
         <translation>载入收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="240"/>
+        <location filename="ItemGUI.py" line="261"/>
         <source>Save List Collection</source>
         <translation>收藏整个列表</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="244"/>
+        <location filename="ItemGUI.py" line="265"/>
         <source>Load List Collection</source>
         <translation>载入整个列表收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="248"/>
+        <location filename="ItemGUI.py" line="269"/>
         <source>Delete Whole List</source>
         <translation>删除整个列表</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="531"/>
+        <location filename="ItemGUI.py" line="552"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="512"/>
+        <location filename="ItemGUI.py" line="533"/>
         <source>Sure you want to delete the whole list?</source>
         <translation>确定要删除整个列表吗？</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="484"/>
+        <location filename="ItemGUI.py" line="505"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="484"/>
+        <location filename="ItemGUI.py" line="505"/>
         <source>The related collection is empty, please add the collection first</source>
         <translation>相关收藏为空，请先添加收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="380"/>
+        <location filename="ItemGUI.py" line="401"/>
         <source> type collection list</source>
         <translation>类型收藏列表</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="420"/>
+        <location filename="ItemGUI.py" line="441"/>
         <source>Add </source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="487"/>
+        <location filename="ItemGUI.py" line="508"/>
         <source> type collection</source>
         <translation>类型收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="420"/>
+        <location filename="ItemGUI.py" line="441"/>
         <source>[] type collection</source>
         <translation>[]类型收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="444"/>
+        <location filename="ItemGUI.py" line="465"/>
         <source>Cover the collection of the same name?</source>
         <translation>是否覆盖同名收藏?</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="531"/>
+        <location filename="ItemGUI.py" line="552"/>
         <source>Add an object that does not belong to this Mod (possibly a Tag)?</source>
         <translation>确认添加一个不属于本Mod的对象？（可能是一个Tag）</translation>
+    </message>
+    <message>
+        <location filename="ItemGUI.py" line="54"/>
+        <source>Add the CardFilterGroup which it belong</source>
+        <translation>添加所属卡片过滤器</translation>
     </message>
 </context>
 <context>
@@ -223,7 +228,7 @@
     <message>
         <location filename="Ui_Main.py" line="91"/>
         <source>PushButton</source>
-        <translation type="obsolete">按钮</translation>
+        <translation>按钮</translation>
     </message>
     <message>
         <location filename="Ui_Main.py" line="92"/>
@@ -284,102 +289,102 @@
 <context>
     <name>ModEditorGUI</name>
     <message>
-        <location filename="main.py" line="143"/>
+        <location filename="main.py" line="159"/>
         <source>Turn off auto contents resize</source>
         <translation>关闭自动内容展开</translation>
     </message>
     <message>
         <location filename="main.py" line="89"/>
         <source>Open</source>
-        <translation type="obsolete">打开</translation>
+        <translation>打开</translation>
     </message>
     <message>
-        <location filename="main.py" line="140"/>
+        <location filename="main.py" line="156"/>
         <source>Turn on auto contents resize</source>
         <translation>打开自动内容展开</translation>
     </message>
     <message>
-        <location filename="main.py" line="172"/>
+        <location filename="main.py" line="188"/>
         <source>Close(Auto-Save)</source>
         <translation>关闭当前页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="176"/>
+        <location filename="main.py" line="192"/>
         <source>Close to the Right(Auto-Save)</source>
         <translation>关闭右侧页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="180"/>
+        <location filename="main.py" line="196"/>
         <source>Close Others(Auto-Save)</source>
         <translation>关闭除此之外所有页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="184"/>
+        <location filename="main.py" line="200"/>
         <source>Close All(Auto-Save)</source>
         <translation>关闭所有页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="450"/>
+        <location filename="main.py" line="468"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="main.py" line="237"/>
+        <location filename="main.py" line="253"/>
         <source>Save the changes before exit?(Collection, Localization, Opened files...)</source>
         <translation>是否在退出去前保存（收藏、本地化、子菜单等）</translation>
     </message>
     <message>
-        <location filename="main.py" line="260"/>
+        <location filename="main.py" line="276"/>
         <source>New Modify</source>
         <translation>新建修改</translation>
     </message>
     <message>
-        <location filename="main.py" line="294"/>
+        <location filename="main.py" line="310"/>
         <source>New File</source>
         <translation>新建文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="600"/>
+        <location filename="main.py" line="621"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="main.py" line="408"/>
+        <location filename="main.py" line="426"/>
         <source>A file with the same name exists</source>
         <translation>存在同名文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="423"/>
+        <location filename="main.py" line="441"/>
         <source>Make sure to delete </source>
         <translation>确定要删除</translation>
     </message>
     <message>
-        <location filename="main.py" line="450"/>
+        <location filename="main.py" line="468"/>
         <source>Save the changes before exit?</source>
         <translation>是否在退出前保存</translation>
     </message>
     <message>
-        <location filename="main.py" line="594"/>
+        <location filename="main.py" line="612"/>
         <source>Please close all opened files first</source>
         <translation>请先关闭所有子菜单</translation>
     </message>
     <message>
-        <location filename="main.py" line="569"/>
+        <location filename="main.py" line="587"/>
         <source>Mod folder with the same name exists</source>
         <translation>存在同名文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="596"/>
+        <location filename="main.py" line="617"/>
         <source>Select a Mod folder</source>
         <translation>选择一个Mod文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="600"/>
+        <location filename="main.py" line="621"/>
         <source>Not a valid Mod folder</source>
         <translation>无效的Mod文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="300"/>
+        <location filename="main.py" line="316"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>

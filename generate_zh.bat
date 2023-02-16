@@ -1,0 +1,1 @@
+pylupdate5.exe *.py -ts zh_CN.ts

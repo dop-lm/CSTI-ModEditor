@@ -51,6 +51,9 @@ class ItemGUI(QWidget, Ui_Item):
             subGpTabButton = QPushButton(self.tr("Add the CardTabGroup which it belong"), self)
             subGpTabButton.clicked.connect(self.on_tabButtonCardDataGpTabGroup)
             self.horizontalLayout.insertWidget(5, subGpTabButton)
+            cardFilterGroupButton = QPushButton(self.tr("Add the CardFilterGroup which it belong"), self)
+            cardFilterGroupButton.clicked.connect(self.on_tabButtonCardDataCardFilterGroup)
+            self.horizontalLayout.insertWidget(6, cardFilterGroupButton)
         if self.field == "CharacterPerk":
             tabButton = QPushButton(self.tr("Add perk exclusive group"), self)
             self.horizontalLayout.insertWidget(2, tabButton)
@@ -126,6 +129,24 @@ class ItemGUI(QWidget, Ui_Item):
             return
 
     @log_exception(True)
+    def on_tabButtonCardDataCardFilterGroup(self, checked: bool=False):
+        select = SelectGUI(self.treeView, field_name = "CardDataCardFilterGroup", type = SelectGUI.Special)
+        select.exec_()
+
+        if select.write_flag and select.lineEdit.text():
+            if "CardDataCardFilterGroup" in self.model.mRootItem.mChilds:
+                itemIndex = self.model.index(self.model.mRootItem.childRow("CardDataCardFilterGroup"), 0, QModelIndex())
+                child_key = 0
+                while str(child_key) in itemIndex.internalPointer().mChilds:
+                    child_key += 1
+                self.model.addItem(itemIndex, str(child_key), str, select.lineEdit.text(), "SpecialWarp", True)
+            else:
+                self.model.addItem(QModelIndex(), "CardDataCardFilterGroup", list, "", "SpecialWarp", True)
+                itemIndex = self.model.index(self.model.mRootItem.childRow("CardDataCardFilterGroup"), 0, QModelIndex())
+                self.model.addItem(itemIndex, "0", str, select.lineEdit.text(), "SpecialWarp", True)
+            return
+
+    @log_exception(True)
     def on_tabButtonGameStat(self, checked: bool=False):
         select = SelectGUI(self.treeView, field_name = "VisibleGameStatStatListTab", type = SelectGUI.Special)
         select.exec_()
@@ -134,7 +155,7 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addItem(QModelIndex(), "VisibleGameStatStatListTab", str, select.lineEdit.text(), "SpecialWarp", True)
             return
 
-    def loadJsonData(self, json_data, is_modify: bool=False):
+    def loadJsonData(self, json_data: dict, is_modify: bool=False):
         self.model = QJsonModel(self.field, is_modify=is_modify)
         self.model.loadJson(json_data)
         self.proxy_model = QJsonProxyModel(self.treeView)
