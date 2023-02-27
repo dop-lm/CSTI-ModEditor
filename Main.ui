@@ -80,10 +80,19 @@
      <addaction name="actionEnglish"/>
     </widget>
     <addaction name="action_ResizeMode"/>
+    <addaction name="action_AutoReplace"/>
     <addaction name="menuLanguage"/>
+   </widget>
+   <widget class="QMenu" name="menuFunction">
+    <property name="title">
+     <string>Function</string>
+    </property>
+    <addaction name="action_AutoTranslationDuplicates"/>
+    <addaction name="action_DeleteObsoleteTranslation"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
+   <addaction name="menuFunction"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_newMod">
@@ -122,6 +131,21 @@
   <action name="actionEnglish">
    <property name="text">
     <string>English</string>
+   </property>
+  </action>
+  <action name="action_AutoReplace">
+   <property name="text">
+    <string>Turn off auto replace key guid</string>
+   </property>
+  </action>
+  <action name="action_AutoTranslationDuplicates">
+   <property name="text">
+    <string>Auto Translation Duplicates</string>
+   </property>
+  </action>
+  <action name="action_DeleteObsoleteTranslation">
+   <property name="text">
+    <string>Delete Obsolete Translation</string>
    </property>
   </action>
  </widget>

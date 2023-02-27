@@ -14,8 +14,10 @@ from data_base import *
 from myLogger import *
 
 class ModifyItemGUI(ItemGUI):
-    def __init__(self, field, auto_resize = True, key: str = "", parent = None):
-        super(ModifyItemGUI, self).__init__(field, auto_resize, key, parent)
+    def __init__(self, parent=None, field:str="", key:str="", item_name:str="", guid:str="", \
+        auto_resize:bool=True, auto_replace_key_guid:bool=False, mod_info:dict=None):
+        super(ModifyItemGUI, self).__init__(parent, field, key, item_name, guid, \
+            auto_resize, auto_replace_key_guid, mod_info)
 
     #override
     def addSpecialButton(self):
@@ -170,7 +172,10 @@ class ModifyItemGUI(ItemGUI):
         name = self.loadCollection.lineEdit.text()
         
         if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
-            self.addWarpItem(index, "Collection", DataBase.AllCollection[item.field()][name])
+            data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
+            if self.auto_replace_key_guid:
+                loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid)
+            self.addWarpItem(index, "Collection", data)
 
     @log_exception(True)
     def on_loadCollListItem(self, checked: bool=False) -> None:
@@ -192,7 +197,10 @@ class ModifyItemGUI(ItemGUI):
         
         if self.loadCollection.write_flag and name in DataBase.AllListCollection[item.field()]:
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
-                self.addWarpItem(index, "Collection", DataBase.AllListCollection[item.field()][name][i])
+                data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
+                if self.auto_replace_key_guid:
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid, item.key(), i)
+                self.addWarpItem(index, "Collection", data)
 
     @log_exception(True)
     def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):

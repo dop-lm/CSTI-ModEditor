@@ -6,6 +6,31 @@ import copy
 from glob import glob
 from myLogger import *
 
+def loopReplaceLocalizationKeyAndReplaceGuid(jsondata:dict, mod_name:str, card_name:str, guid:str="", entry_key:str="", index:int=-1):
+    if isinstance(jsondata, list):
+        for item in jsondata:
+            loopReplaceLocalizationKeyAndReplaceGuid(item, mod_name, card_name, guid)
+        return
+    elif isinstance(jsondata, dict):
+        pass
+    else:
+        return
+    for key in jsondata.keys():
+        if key == "LocalizationKey" and jsondata[key] != "":
+            entry = jsondata[key][jsondata[key].rfind("_"):]
+            if entry_key != "" and index > 0:
+                st_idx = entry.rfind(entry_key)
+                end_idx = entry[st_idx:].find("]") + st_idx
+                entry = entry[:st_idx + len(entry_key) + 1] + str(index) +  entry[end_idx:]
+            jsondata[key] = mod_name + "_" + card_name + entry
+        elif isinstance(jsondata[key], dict):
+            loopReplaceLocalizationKeyAndReplaceGuid(jsondata[key], mod_name, card_name, guid, entry_key, index)
+        elif isinstance(jsondata[key], list):
+            for item in jsondata[key]:
+                loopReplaceLocalizationKeyAndReplaceGuid(item, mod_name, card_name, guid, entry_key, index)
+        elif key == "ParentObjectID" and guid != "" and jsondata["ParentObjectID"] != "":
+            jsondata["ParentObjectID"] = guid
+
 def delete_keys_from_dict(src_dict, key: str):
     for field in list(src_dict.keys()):
         if field == key:
@@ -366,21 +391,33 @@ class DataBase(object):
         with open(DataBase.DataDir + r"/Mods/" + r"ListCollection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllListCollection, f)
 
-    def loopLoadModSimpCn(json, mod_name):
+    def loopLoadModSimpCn(json, mod_name:str, simpCn_dict:dict=None):
         if type(json) is dict:
             for key, item in json.items():
-                if key == "LocalizationKey" and type(item) == str and item.startswith(mod_name):
-                    if item not in DataBase.AllModSimpCn:
-                        if "DefaultText" in json:
-                            DataBase.AllModSimpCn[item] = {"original": json["DefaultText"], "translate": ""}
-                    else:
-                        if "DefaultText" in json:
-                            DataBase.AllModSimpCn[item]["original"] = json["DefaultText"]
-                if type(item) == list:
+                if type(item) == str:
+                    if key == "LocalizationKey" and item.startswith(mod_name):
+                        if simpCn_dict is not None and type(simpCn_dict) is dict:
+                            if item not in simpCn_dict:
+                                if "DefaultText" in json:
+                                    simpCn_dict[item] = {"original": json["DefaultText"], "translate": ""}
+                            else:
+                                if "DefaultText" in json:
+                                    simpCn_dict[item]["original"] = json["DefaultText"]
+                        else:
+                            if item not in DataBase.AllModSimpCn:
+                                if "DefaultText" in json:
+                                    DataBase.AllModSimpCn[item] = {"original": json["DefaultText"], "translate": ""}
+                            else:
+                                if "DefaultText" in json:
+                                    DataBase.AllModSimpCn[item]["original"] = json["DefaultText"]
+                elif type(item) == list:
                     for sub_item in item:
-                        DataBase.loopLoadModSimpCn(sub_item, mod_name)
-                if type(item) == dict:
-                    DataBase.loopLoadModSimpCn(item, mod_name)
+                        DataBase.loopLoadModSimpCn(sub_item, mod_name, simpCn_dict)
+                elif type(item) == dict:
+                    DataBase.loopLoadModSimpCn(item, mod_name, simpCn_dict)
+        elif type(json) is list:
+            for value in json:
+                DataBase.loopLoadModSimpCn(value, mod_name, simpCn_dict)
 
     def loadModSimpCn(mod_dir):
         for dir in os.listdir(mod_dir):
@@ -403,9 +440,37 @@ class DataBase(object):
                                 DataBase.AllModSimpCn[keys[0]]["translate"] = keys[2].replace("\n","")
                         else:
                             print("Wrong Format Key")
-        
-    def saveModSimpCn(mod_dir):
+
+    def autoTranslationDuplicates(mod_dir):
         DataBase.loadModSimpCn(mod_dir)
+        tran_dict = {}
+        for item in DataBase.AllModSimpCn.values():
+            if not item["original"] in tran_dict and "translate" in item and item["translate"] != "":
+                tran_dict[item["original"]] = item["translate"]
+        for item in DataBase.AllModSimpCn.values():
+            if "translate" in item and item["translate"] == "" and item["original"] in tran_dict:
+                item["translate"] = tran_dict[item["original"]]
+        DataBase.saveModSimpCn(mod_dir, False)
+
+    def deleteObsolete(mod_dir:str, mod_name:str):
+        DataBase.loadModSimpCn(mod_dir)
+        files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
+        ModSimpCnDict = {}
+        for file in files:
+            try:
+                with open(file, "r") as f:
+                    data = json.load(f)
+                    DataBase.loopLoadModSimpCn(data, mod_name, ModSimpCnDict)
+            except Exception as ex:
+                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+        obsolete_keys = set(DataBase.AllModSimpCn.keys()).difference(ModSimpCnDict.keys())
+        for key in obsolete_keys:
+            del DataBase.AllModSimpCn[key]
+        DataBase.saveModSimpCn(mod_dir, False)
+        
+    def saveModSimpCn(mod_dir, loadSrc:bool=True):
+        if loadSrc:
+            DataBase.loadModSimpCn(mod_dir)
         with open(mod_dir + r"/Localization/SimpCn.csv", "w", encoding='utf-8') as f:
             for key in DataBase.AllModSimpCn:
                 f.write(key)

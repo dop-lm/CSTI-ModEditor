@@ -16,11 +16,12 @@ class SelectGUI(QDialog, Ui_Select):
     Special = 4
     NewModify = 5
 
-    def __init__(self, parent = None, field_name = "", checked = False, type = 0):
+    def __init__(self, parent=None, field_name:str="", checked:bool=False, type:int=0, auto_replace_key_guid:bool=False):
         super(SelectGUI, self).__init__(parent)
         self.setupUi(self)
         self.field_name = field_name
         self.write_flag = False
+        self.auto_replace_key_guid = auto_replace_key_guid
         self.modify_type = None
         self.setWindowTitle(self.tr("Add ") + field_name + self.tr(" Reference Type"))
 
@@ -30,6 +31,10 @@ class SelectGUI(QDialog, Ui_Select):
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
+            if not self.auto_replace_key_guid:
+                self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(self.tr("Auto Replace LocalizationKey"))
+            else:
+                self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(self.tr("No Replace LocalizationKey"))
 
         if type == SelectGUI.NewModify:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Object"))
@@ -195,3 +200,6 @@ class SelectGUI(QDialog, Ui_Select):
     def on_accepted(self, button: QAbstractButton):
         if button == self.buttonBox.button(QDialogButtonBox.Ok):
             self.write_flag = True
+        if button == self.buttonBox.button(QDialogButtonBox.YesToAll):
+            self.write_flag = True
+            self.auto_replace_key_guid = not self.auto_replace_key_guid

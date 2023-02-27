@@ -13,11 +13,16 @@ from CollectionGUI import *
 from data_base import *
 
 class ItemGUI(QWidget, Ui_Item):
-    def __init__(self, field, auto_resize = True, key: str = "", parent = None):
+    def __init__(self, parent=None, field:str="", key:str="", item_name:str="", guid:str="", \
+        auto_resize:bool=True, auto_replace_key_guid:bool=False, mod_info:dict=None):
         super(ItemGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
+        self.item_name = item_name
+        self.guid = guid
+        self.mod_info = mod_info
         self.tab_key = key
+        self.auto_replace_key_guid = auto_replace_key_guid
         self.treeView.setItemDelegateForColumn(1, ItemDelegate(self.field, self.treeView))
         self.treeView.setItemDelegateForColumn(4, EnableDelegate(self.treeView))
         self.treeView.setSortingEnabled(True)
@@ -339,6 +344,8 @@ class ItemGUI(QWidget, Ui_Item):
                                 child_key = 0
                                 while str(child_key) in item.mChilds:
                                     child_key += 1
+                                if self.auto_replace_key_guid:
+                                    loopReplaceLocalizationKeyAndReplaceGuid(sub_data, self.mod_info["Name"], self.item_name, self.guid, item.key(), child_key)
                                 self.model.addJsonItem(srcIndex, sub_data, item.field(), str(child_key))
                         return
     
@@ -382,7 +389,10 @@ class ItemGUI(QWidget, Ui_Item):
             child_key = 0
             while str(child_key) in item.mChilds:
                 child_key += 1
-            self.model.addJsonItem(srcIndex, DataBase.AllCollection[item.field()][name], item.field(), str(child_key))
+            data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
+            if self.auto_replace_key_guid:
+                loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid, item.key(), child_key)
+            self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
     @log_exception(True)
@@ -408,7 +418,10 @@ class ItemGUI(QWidget, Ui_Item):
                 child_key = 0
                 while str(child_key) in item.mChilds:
                     child_key += 1
-                self.model.addJsonItem(srcIndex, DataBase.AllListCollection[item.field()][name][i], item.field(), str(child_key))
+                data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
+                if self.auto_replace_key_guid:
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid, item.key(), child_key)
+                self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
     @log_exception(True)
@@ -486,7 +499,8 @@ class ItemGUI(QWidget, Ui_Item):
                     if template_key in DataBase.AllPath[self.field]:
                         with open(DataBase.AllPath[self.field][template_key], 'r') as f:
                             data = json.load(f)[item.key()]
-                        
+                        if self.auto_replace_key_guid:
+                            loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid)
                         self.model.deleteItem(srcIndex)
                         self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                         return
@@ -511,7 +525,10 @@ class ItemGUI(QWidget, Ui_Item):
             name = self.loadCollection.lineEdit.text()
             if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
                 self.model.deleteItem(srcIndex)
-                self.model.addJsonItem(srcIndex.parent(), DataBase.AllCollection[item.field()][name], item.field(), item.key())
+                data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
+                if self.auto_replace_key_guid:
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid)
+                self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                 return
 
     @log_exception(True)

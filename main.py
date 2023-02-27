@@ -25,7 +25,7 @@ from glob import glob
 from pathlib import Path
 from functools import partial
 
-ModEditorVersion = "0.4.7"
+ModEditorVersion = "0.5.0"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -68,6 +68,20 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "LastOpenDir", self.last_open_dir)
             self.saveConfig()
 
+        if self.config.has_option("Config", "AutoReplace_LocalizationKey_ParentObjectID"):
+            self.auto_replace_key_guid = self.config.getboolean("Config", "AutoReplace_LocalizationKey_ParentObjectID")
+        else:
+            self.auto_replace_key_guid = False
+            self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
+            self.saveConfig()
+
+        if self.config.has_option("Config", "AutoResize"):
+            self.autoresize = self.config.getboolean("Config", "AutoResize")
+        else:
+            self.autoresize = True
+            self.config.set("Config", "AutoResize", str(self.autoresize))
+            self.saveConfig()
+
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
@@ -99,8 +113,15 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)
 
-        self.autoresize = True
-        self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
+        if self.autoresize:
+            self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
+        else:
+            self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
+
+        if self.auto_replace_key_guid:
+            self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
+        else:
+            self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
         
         width = QtWidgets.qApp.desktop().availableGeometry(self).width()
         self.splitter.setSizes([int(width * 1/8), int(width * 7/8)])
@@ -111,7 +132,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_loadMod.triggered.connect(self.on_loadMod)
         self.action_save.triggered.connect(self.on_saveMod)
         self.action_ExportZip.triggered.connect(self.on_exportZip)
-        self.action_ResizeMode.triggered.connect(self.on_ChangeCustomContextMenu)
+        self.action_ResizeMode.triggered.connect(self.on_actionResizeMode)
+        self.action_AutoReplace.triggered.connect(self.on_actionAutoReplace)
+        self.action_AutoTranslationDuplicates.triggered.connect(self.on_actionAutoTranslationDuplicates)
+        self.action_DeleteObsoleteTranslation.triggered.connect(self.on_actionDeleteObsoleteTranslation)
 
         self.actionChinese.triggered.connect(self.on_select_Chinese)
         self.actionEnglish.triggered.connect(self.on_select_English)
@@ -150,13 +174,34 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.loadLanguage()
 
     @log_exception(True)
-    def on_ChangeCustomContextMenu(self, checked: bool=False):
+    def on_actionResizeMode(self, checked: bool=False):
         if self.autoresize:
             self.autoresize = False
             self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
         else:
             self.autoresize = True
             self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
+        self.saveConfig()
+
+    @log_exception(True)
+    def on_actionAutoReplace(self, checked: bool=False):
+        if self.auto_replace_key_guid:
+            self.auto_replace_key_guid = False
+            self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
+        else:
+            self.auto_replace_key_guid = True
+            self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
+        self.saveConfig()
+
+    @log_exception(True)
+    def on_actionAutoTranslationDuplicates(self, checked: bool=False):
+        if self.mod_info:
+            DataBase.autoTranslationDuplicates(self.mod_path)
+
+    @log_exception(True)
+    def on_actionDeleteObsoleteTranslation(self, checked: bool=False):
+        if self.mod_info:
+            DataBase.deleteObsolete(self.mod_path, self.mod_info["Name"])
 
     @log_exception(True)
     def treeItemRenamed(self, path: str, old_file: str, new_file: str):
@@ -361,7 +406,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             top_name = self.file_model.fileName(top_parent)
             if file_name:
                 group_name = top_name
-                select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewData)
+                select = SelectGUI.SelectGUI(self, field_name= group_name, checked=False, type=SelectGUI.SelectGUI.NewData, auto_replace_key_guid=self.auto_replace_key_guid)
                 select.exec_()
                 if select.write_flag:
                     template_key = select.lineEdit.text()
@@ -376,6 +421,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                     temp_data = f.read(-1)
                                 temp_json = json.loads(temp_data)
                                 guid = temp_json["UniqueID"]
+                                if select.auto_replace_key_guid and self.auto_replace_key_guid:
+                                    loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Name"], card_name)
+                                temp_data = json.dumps(temp_json)
                                 temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-",""))
                                 with open(card_path, "w") as f:
                                     f.write(temp_data)
@@ -524,7 +572,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     if template_reftrans in DataBase.AllGuid[group_key]:
                         target_group_name = group_key
                         break
-                item = ModifyItemGUI.ModifyItemGUI(field=target_group_name, auto_resize=self.autoresize, key=tab_key, parent=self.tabWidget)
                 template_ref = template_reftrans
                 if template_reftrans.rfind("(") >= 0:
                     template_ref = template_reftrans[0:template_reftrans.rfind("(")]
@@ -535,17 +582,35 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     template_json = json.load(f)
                     self.loopDelGameSourceModifyTemplateWarpper(template_json)
                 src_json.update(template_json)
+                if "UniqueID" in src_json:
+                    guid = src_json["UniqueID"]
+                else:
+                    guid = ""
+                item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
+                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info)
                 item.loadJsonData(src_json, is_modify=True)
             elif top_name in DataBase.RefGuidList:
-                item = ItemGUI.ItemGUI(field=top_name, auto_resize=self.autoresize, key=tab_key, parent=self.tabWidget)
                 with open(file_path, 'r') as f:
-                    item.loadJsonData(json.load(f))
+                    data = json.load(f)
+                    if "UniqueID" in data:
+                        guid = data["UniqueID"]
+                    else:
+                        guid = ""
+                item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
+                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info)
+                item.loadJsonData(data)
             elif top_name == "ScriptableObject":
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    if "UniqueID" in data:
+                        guid = data["UniqueID"]
+                    else:
+                        guid = ""
                 top2nd_parent = self.getDepthParent(index, depth=2)
                 top2nd_name = self.file_model.fileName(top2nd_parent)
-                item = ItemGUI.ItemGUI(field=top2nd_name, auto_resize=self.autoresize, key=tab_key, parent=self.tabWidget)
-                with open(file_path, 'r') as f:
-                    item.loadJsonData(json.load(f))
+                item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
+                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info)
+                item.loadJsonData(data)
             else:
                 print("openTreeViewItem Unexport Type")
                 return
@@ -650,7 +715,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.treeView.setColumnHidden(2, True)
         self.treeView.setColumnHidden(3, True)
 
-        self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"]))
+        self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"] + "-" + self.mod_info["Version"]))
         self.init_completer()
 
 if __name__ == '__main__':
