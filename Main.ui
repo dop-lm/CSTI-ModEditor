@@ -89,6 +89,7 @@
     </property>
     <addaction name="action_AutoTranslationDuplicates"/>
     <addaction name="action_DeleteObsoleteTranslation"/>
+    <addaction name="action_FormatAllLocalizationKey"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -146,6 +147,11 @@
   <action name="action_DeleteObsoleteTranslation">
    <property name="text">
     <string>Delete Obsolete Translation</string>
+   </property>
+  </action>
+  <action name="action_FormatAllLocalizationKey">
+   <property name="text">
+    <string>Format All LocalizationKey</string>
    </property>
   </action>
  </widget>

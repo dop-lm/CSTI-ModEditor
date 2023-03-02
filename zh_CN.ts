@@ -221,7 +221,7 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Ui_Main.py" line="102"/>
+        <location filename="Ui_Main.py" line="105"/>
         <source>ModEditor</source>
         <translation>ModEditor</translation>
     </message>
@@ -231,85 +231,90 @@
         <translation>按钮</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="104"/>
+        <location filename="Ui_Main.py" line="107"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="105"/>
+        <location filename="Ui_Main.py" line="108"/>
         <source>Setting</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="108"/>
+        <location filename="Ui_Main.py" line="111"/>
         <source>New Mod Project</source>
         <translation>新建Mod项目</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="109"/>
+        <location filename="Ui_Main.py" line="112"/>
         <source>Load Mod Project</source>
         <translation>导入Mod项目</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="110"/>
+        <location filename="Ui_Main.py" line="113"/>
         <source>Save Mod Project</source>
         <translation>保存Mod项目</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="111"/>
+        <location filename="Ui_Main.py" line="114"/>
         <source>Turn off auto contents resize</source>
         <translation>关闭自动内容展开</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="113"/>
+        <location filename="Ui_Main.py" line="116"/>
         <source>Export Mod as Zip Format</source>
         <translation>导出Zip格式</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="106"/>
+        <location filename="Ui_Main.py" line="109"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="114"/>
+        <location filename="Ui_Main.py" line="117"/>
         <source>Chinese</source>
         <translation>中文</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="115"/>
+        <location filename="Ui_Main.py" line="118"/>
         <source>English</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="103"/>
+        <location filename="Ui_Main.py" line="106"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="116"/>
+        <location filename="Ui_Main.py" line="119"/>
         <source>Turn off auto replace key guid</source>
         <translation>关闭自动替换LocalizationKey和GUID</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="107"/>
+        <location filename="Ui_Main.py" line="110"/>
         <source>Function</source>
         <translation>功能</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="117"/>
+        <location filename="Ui_Main.py" line="120"/>
         <source>Auto Translation Duplicates</source>
         <translation>自动翻译重复项</translation>
     </message>
     <message>
-        <location filename="Ui_Main.py" line="118"/>
+        <location filename="Ui_Main.py" line="121"/>
         <source>Delete Obsolete Translation</source>
         <translation>删除过时的翻译</translation>
+    </message>
+    <message>
+        <location filename="Ui_Main.py" line="122"/>
+        <source>Format All LocalizationKey</source>
+        <translation>格式化所有 LocalizationKey</translation>
     </message>
 </context>
 <context>
     <name>ModEditorGUI</name>
     <message>
-        <location filename="main.py" line="183"/>
+        <location filename="main.py" line="184"/>
         <source>Turn off auto contents resize</source>
         <translation>关闭自动内容展开</translation>
     </message>
@@ -319,104 +324,124 @@
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="main.py" line="180"/>
+        <location filename="main.py" line="181"/>
         <source>Turn on auto contents resize</source>
         <translation>打开自动内容展开</translation>
     </message>
     <message>
-        <location filename="main.py" line="233"/>
+        <location filename="main.py" line="243"/>
         <source>Close(Auto-Save)</source>
         <translation>关闭当前页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="237"/>
+        <location filename="main.py" line="247"/>
         <source>Close to the Right(Auto-Save)</source>
         <translation>关闭右侧页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="241"/>
+        <location filename="main.py" line="251"/>
         <source>Close Others(Auto-Save)</source>
         <translation>关闭除此之外所有页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="245"/>
+        <location filename="main.py" line="255"/>
         <source>Close All(Auto-Save)</source>
         <translation>关闭所有页（自动保存）</translation>
     </message>
     <message>
-        <location filename="main.py" line="516"/>
+        <location filename="main.py" line="526"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="main.py" line="298"/>
+        <location filename="main.py" line="308"/>
         <source>Save the changes before exit?(Collection, Localization, Opened files...)</source>
         <translation>是否在退出去前保存（收藏、本地化、子菜单等）</translation>
     </message>
     <message>
-        <location filename="main.py" line="321"/>
+        <location filename="main.py" line="331"/>
         <source>New Modify</source>
         <translation>新建修改</translation>
     </message>
     <message>
-        <location filename="main.py" line="355"/>
+        <location filename="main.py" line="365"/>
         <source>New File</source>
         <translation>新建文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="686"/>
+        <location filename="main.py" line="696"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="main.py" line="474"/>
+        <location filename="main.py" line="484"/>
         <source>A file with the same name exists</source>
         <translation>存在同名文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="489"/>
+        <location filename="main.py" line="499"/>
         <source>Make sure to delete </source>
         <translation>确定要删除</translation>
     </message>
     <message>
-        <location filename="main.py" line="516"/>
+        <location filename="main.py" line="526"/>
         <source>Save the changes before exit?</source>
         <translation>是否在退出前保存</translation>
     </message>
     <message>
-        <location filename="main.py" line="677"/>
+        <location filename="main.py" line="687"/>
         <source>Please close all opened files first</source>
         <translation>请先关闭所有子菜单</translation>
     </message>
     <message>
-        <location filename="main.py" line="652"/>
+        <location filename="main.py" line="662"/>
         <source>Mod folder with the same name exists</source>
         <translation>存在同名文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="682"/>
+        <location filename="main.py" line="692"/>
         <source>Select a Mod folder</source>
         <translation>选择一个Mod文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="686"/>
+        <location filename="main.py" line="696"/>
         <source>Not a valid Mod folder</source>
         <translation>无效的Mod文件夹</translation>
     </message>
     <message>
-        <location filename="main.py" line="361"/>
+        <location filename="main.py" line="371"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="main.py" line="193"/>
+        <location filename="main.py" line="194"/>
         <source>Turn off auto replace key guid</source>
         <translation>关闭自动替换LocalizationKey和GUID</translation>
     </message>
     <message>
-        <location filename="main.py" line="190"/>
+        <location filename="main.py" line="191"/>
         <source>Turn on auto replace key guid</source>
         <translation>打开自动替换LocalizationKey和GUID</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="205"/>
+        <source>Delete Obsolete</source>
+        <translation>删除过时项</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="205"/>
+        <source>Sure you want to remove the outdated translations? (Note that all translations that are not automatically generated by Editor will be considered obsolete)</source>
+        <translation>确定要删除过时的翻译吗？（注意所有非Editor自动生成的翻译都将被视为过时的翻译）</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="212"/>
+        <source>Add Prefixes</source>
+        <translation>添加前缀</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="212"/>
+        <source>Sure you want to add Mod prefixes to all LocalizationKeys?</source>
+        <translation>确定要给所有LocalizationKey添加Mod前缀？</translation>
     </message>
 </context>
 <context>

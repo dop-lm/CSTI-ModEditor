@@ -75,6 +75,8 @@ class DataBase(object):
     AllNotes = {}           # DataBase.AllNotes["CardData"]["CardName"] -> Note
     AllBaseJsonData = {}    # DataBase.AllBaseJsonData["CardData"]["CardOnCardAction"] -> base json data
 
+    AllSimpCn = {}  # DataBase.AllSimpCn[key] -> {origin, trans}
+    AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
 
     def __init__(self):
         pass
@@ -111,6 +113,9 @@ class DataBase(object):
 
         # Load Note
         DataBase.loadNote()
+
+        # Load GameSimpCn
+        DataBase.loadGameSimpCn()
 
     def LoadModData(mod_name, mod_dir):
         DataBase.AllRef = {}
@@ -443,13 +448,17 @@ class DataBase(object):
 
     def autoTranslationDuplicates(mod_dir):
         DataBase.loadModSimpCn(mod_dir)
-        tran_dict = {}
+        if len(DataBase.AllTranDict) == 0:
+            for item in DataBase.AllSimpCn.values():
+                if not item["original"] in DataBase.AllTranDict and "translate" in item and item["translate"] != "":
+                    DataBase.AllTranDict[item["original"]] = item["translate"]
         for item in DataBase.AllModSimpCn.values():
-            if not item["original"] in tran_dict and "translate" in item and item["translate"] != "":
-                tran_dict[item["original"]] = item["translate"]
+            if not item["original"] in DataBase.AllTranDict and "translate" in item and item["translate"] != "":
+                DataBase.AllTranDict[item["original"]] = item["translate"]
         for item in DataBase.AllModSimpCn.values():
-            if "translate" in item and item["translate"] == "" and item["original"] in tran_dict:
-                item["translate"] = tran_dict[item["original"]]
+            if "translate" in item and item["translate"] == "":
+                if item["original"] in DataBase.AllTranDict:
+                    item["translate"] = DataBase.AllTranDict[item["original"]]
         DataBase.saveModSimpCn(mod_dir, False)
 
     def deleteObsolete(mod_dir:str, mod_name:str):
@@ -467,7 +476,43 @@ class DataBase(object):
         for key in obsolete_keys:
             del DataBase.AllModSimpCn[key]
         DataBase.saveModSimpCn(mod_dir, False)
+
+    def formatAllLocalizationKey(mod_dir:str, mod_name:str):
+        DataBase.loadModSimpCn(mod_dir)
+        files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
+        for file in files:
+            try:
+                with open(file, "r") as f:
+                    data = json.load(f)
+                    DataBase.loopFormatSimpCn(data, mod_name)
+                with open(file, "w") as f:
+                    json.dump(data, f, sort_keys=True, indent=4)
+            except Exception as ex:
+                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+        DataBase.saveModSimpCn(mod_dir, False)
         
+    def loopFormatSimpCn(json, mod_name:str):
+        if type(json) is dict:
+            for key, item in json.items():
+                if type(item) == str:
+                    if key == "LocalizationKey" and json[key] != "":
+                        if not item.startswith(mod_name):
+                            json[key] = mod_name + "_" + json[key]
+                        if json[key] not in DataBase.AllModSimpCn:
+                            if "DefaultText" in json:
+                                DataBase.AllModSimpCn[json[key]] = {"original": json["DefaultText"], "translate": ""}
+                        else:
+                            if "DefaultText" in json:
+                                DataBase.AllModSimpCn[json[key]]["original"] = json["DefaultText"]
+                elif type(item) == list:
+                    for sub_item in item:
+                        DataBase.loopFormatSimpCn(sub_item, mod_name)
+                elif type(item) == dict:
+                    DataBase.loopFormatSimpCn(item, mod_name)
+        elif type(json) is list:
+            for value in json:
+                DataBase.loopFormatSimpCn(value, mod_name)
+
     def saveModSimpCn(mod_dir, loadSrc:bool=True):
         if loadSrc:
             DataBase.loadModSimpCn(mod_dir)
@@ -503,6 +548,30 @@ class DataBase(object):
                                 if type(item) == str:
                                     DataBase.AllNotes[file[:-5]][key] = item
                 except Exception as ex:
+                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+
+    def loadGameSimpCn():
+        try:
+            if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/SimpCn.csv'):
+                with open(DataBase.DataDir + r'/CSTI-JsonData/SimpCn.csv', "r", encoding='utf-8') as f:
+                    lines = f.readlines(-1)
+                    for line in lines:
+                        keys = line.split(',')
+                        if len(keys) > 3 and line.find('"') != -1:
+                            new_keys = line.split('"')
+                            if len(new_keys) == 3 and new_keys[0][-1] == ',' and  new_keys[2][0] == ',':
+                                if new_keys[0][:-1] not in DataBase.AllSimpCn:
+                                    DataBase.AllSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"',''), "translate": new_keys[2][1:].replace("\n","")}
+                                else:
+                                    DataBase.AllSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n","")
+                        elif len(keys) == 3:
+                            if keys[0] not in DataBase.AllSimpCn:
+                                DataBase.AllSimpCn[keys[0]] = {"original": keys[1].replace('"',''), "translate": keys[2].replace("\n","")}
+                            else:
+                                DataBase.AllSimpCn[keys[0]]["translate"] = keys[2].replace("\n","")
+                        else:
+                            print("Wrong Format Key: " + line)
+        except Exception as ex:
                     QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     # def loadTemplate():
