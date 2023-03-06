@@ -170,7 +170,7 @@ class QJsonTreeItem(object):
         else:
             rootItem.setKey(itemKey)
 
-        if itemField in DataBase.AllTypeField:
+        if itemField in DataBase.AllTypeField or itemField in DataBase.AllEnum:
             rootItem.setField(itemField)
             
         jsonType = None

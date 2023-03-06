@@ -10,8 +10,9 @@ import traceback
 import sys
 import os
 import shutil
-import json
+import ujson as json
 import uuid
+import time
 import configparser
 # import anytree
 from myLogger import *
@@ -25,7 +26,7 @@ from glob import glob
 from pathlib import Path
 from functools import partial
 
-ModEditorVersion = "0.5.2"
+ModEditorVersion = "0.5.3"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -642,7 +643,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     def loopDelGameSourceModifyTemplateWarpper(self, json):
         for key in list(json.keys()):
-            if key.endswith("WarpType") or key.endswith("WarpData"):
+            if key.endswith("WarpType"):
+                del json[key]
+            if key.endswith("WarpData"):
+                json[key[:-8]] = json[key]
                 del json[key]
 
     def delGameSourceModifyTemplate(self, json):

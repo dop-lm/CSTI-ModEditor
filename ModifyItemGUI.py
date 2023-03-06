@@ -81,6 +81,14 @@ class ModifyItemGUI(ItemGUI):
                     if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
                         if item.type() == "list": 
                             pRefAct = QAction(self.tr("Append Reference"), menu)
+
+                            pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                            pSaveListAct.triggered.connect(self.on_saveRefListItem)
+                            menu.addAction(pSaveListAct)
+
+                            pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                            pNewListAct.triggered.connect(self.on_loadRefListItem)
+                            menu.addAction(pNewListAct)
                         else:
                             pRefAct = QAction(self.tr("Reference"), menu)
                         pRefAct.triggered.connect(self.on_addRefItem)
@@ -90,6 +98,10 @@ class ModifyItemGUI(ItemGUI):
                             pModifyRefAct = QAction(self.tr("Add Reference"), menu)
                             pModifyRefAct.triggered.connect(self.on_addAddRefItem)
                             menu.addAction(pModifyRefAct)
+
+                            pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                            pNewListAct.triggered.connect(self.on_addLoadRefListItem)
+                            menu.addAction(pNewListAct)
                 elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
                      item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or \
                         item.field() == "WarpAdd" or item.field() == "WarpModify":
@@ -215,6 +227,26 @@ class ModifyItemGUI(ItemGUI):
                 return
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
 
+    def addAddRefItem(self, data:str, item, index:QModelIndex):
+        if item.field() in DataBase.RefGuidList:
+            if item.field() == "CardData":
+                if data in DataBase.AllCardData:
+                    self.addWarpItem(index, "Ref", DataBase.AllCardData[data])
+                    # self.model.addRefWarp(index, DataBase.AllCardData[data])
+                    return
+            else:
+                if data in DataBase.AllGuid[item.field()]:
+                    self.addWarpItem(index, "Ref", DataBase.AllGuid[item.field()][data])
+                    # self.model.addRefWarp(index, DataBase.AllGuid[item.field()][data])
+                    return
+        elif item.field() in DataBase.RefNameList:
+            self.addWarpItem(index, "Ref", data)
+            # self.model.addRefWarp(index, data)
+        elif item.field() == "ScriptableObject":
+            self.addWarpItem(index, "Ref", DataBase.AllScriptableObject[data])
+            # self.model.addRefWarp(index, DataBase.AllScriptableObject[data])
+            return
+
     @log_exception(True)
     def on_addAddRefItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
@@ -229,24 +261,36 @@ class ModifyItemGUI(ItemGUI):
             select.exec_()
 
             if select.write_flag:
-                if item.field() in DataBase.RefGuidList:
-                    if item.field() == "CardData":
-                        if select.lineEdit.text() in DataBase.AllCardData:
-                            self.addWarpItem(index, "Ref", DataBase.AllCardData[select.lineEdit.text()])
-                            # self.model.addRefWarp(index, DataBase.AllCardData[select.lineEdit.text()])
-                            return
-                    else:
-                        if select.lineEdit.text() in DataBase.AllGuid[item.field()]:
-                            self.addWarpItem(index, "Ref", DataBase.AllGuid[item.field()][select.lineEdit.text()])
-                            # self.model.addRefWarp(index, DataBase.AllGuid[item.field()][select.lineEdit.text()])
-                            return
-                elif item.field() in DataBase.RefNameList:
-                    self.addWarpItem(index, "Ref", select.lineEdit.text())
-                    # self.model.addRefWarp(index, select.lineEdit.text())
-                elif item.field() == "ScriptableObject":
-                    self.addWarpItem(index, "Ref", DataBase.AllScriptableObject[select.lineEdit.text()])
-                    # self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
-                    return
+                self.addAddRefItem(select.lineEdit.text(), item, index)
+                
+    @log_exception(True)
+    def on_addLoadRefListItem(self, checked: bool=False) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if item.field() not in DataBase.AllListCollection or len(DataBase.AllListCollection[item.field()]) == 0:
+            QMessageBox.information(self, self.tr("Info"), self.tr("The related collection is empty, please add the collection first"))
+            return
+        self.loadCollection = CollectionGUI(item.field(), DataBase.AllListCollection, self)
+        self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection list"))
+        self.loadCollection.exec_()
+        
+        warpTypeItem = item.brother(item.key() + "WarpType")
+        warpDataItem = item.brother(item.key() + "WarpData")
+        if warpTypeItem is None or warpDataItem is None:
+            return
+
+        name = self.loadCollection.lineEdit.text()
+        
+        if self.loadCollection.write_flag and name in DataBase.AllListCollection[item.field()]:
+            for i in range(len(DataBase.AllListCollection[item.field()][name])):
+                data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
+                self.addAddRefItem(data, item, index)
+            return
 
     @log_exception(True)
     def on_addEmptyItem(self, checked: bool=False):

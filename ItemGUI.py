@@ -166,8 +166,8 @@ class ItemGUI(QWidget, Ui_Item):
         self.proxy_model = QJsonProxyModel(self.treeView)
         self.proxy_model.setSourceModel(self.model)
         self.treeView.setModel(self.proxy_model)
-        for i in range(self.model.columnCount()):
-            self.treeView.resizeColumnToContents(i)
+        # for i in range(self.model.columnCount()):
+        #     self.treeView.resizeColumnToContents(i)
 
     @log_exception(True)
     def on_showInvalidButtonClicked(self, checked: bool=False) -> None:
@@ -223,6 +223,15 @@ class ItemGUI(QWidget, Ui_Item):
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
                     if item.type() == "list": 
                         pRefAct = QAction(self.tr("Append Reference"), menu)
+                        
+                        pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                        pSaveListAct.triggered.connect(self.on_saveRefListItem)
+                        menu.addAction(pSaveListAct)
+
+                        pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                        pNewListAct.triggered.connect(self.on_loadRefListItem)
+                        menu.addAction(pNewListAct)
+
                         if item.key() == "InventorySlots":
                             pEmptyRefAct = QAction(self.tr("Append Inventory Slot"), menu)
                             pEmptyRefAct.triggered.connect(self.on_addEmptyRefItem)
@@ -360,7 +369,9 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
         if self.field in DataBase.AllBaseJsonData and item.field() in DataBase.AllBaseJsonData[self.field]:
-            data = DataBase.AllBaseJsonData[self.field][item.field()]            
+            data = DataBase.AllBaseJsonData[self.field][item.field()]         
+            if item.field() in DataBase.AllEnum:
+                data = 0   
             child_key = 0
             while str(child_key) in item.mChilds:
                 child_key += 1
@@ -423,6 +434,35 @@ class ItemGUI(QWidget, Ui_Item):
                     loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid, item.key(), child_key)
                 self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
+        
+    @log_exception(True)
+    def on_loadRefListItem(self, checked: bool=False) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if item.field() not in DataBase.AllListCollection or len(DataBase.AllListCollection[item.field()]) == 0:
+            QMessageBox.information(self, self.tr("Info"), self.tr("The related collection is empty, please add the collection first"))
+            return
+        self.loadCollection = CollectionGUI(item.field(), DataBase.AllListCollection, self)
+        self.loadCollection.setWindowTitle(item.field() + self.tr(" type collection list"))
+        self.loadCollection.exec_()
+        
+        warpTypeItem = item.brother(item.key() + "WarpType")
+        warpDataItem = item.brother(item.key() + "WarpData")
+        if warpTypeItem is None or warpDataItem is None:
+            return
+        
+        name = self.loadCollection.lineEdit.text()
+        
+        if self.loadCollection.write_flag and name in DataBase.AllListCollection[item.field()]:
+            for i in range(len(DataBase.AllListCollection[item.field()][name])):
+                data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
+                self.addRefItem(data, item, index)
+            return
 
     @log_exception(True)
     def on_saveItem(self, checked: bool=False) -> None:
@@ -455,6 +495,21 @@ class ItemGUI(QWidget, Ui_Item):
         self.newSaveList.exec_()
 
     @log_exception(True)
+    def on_saveRefListItem(self, checked: bool=False) -> None:
+        index = self.treeView.currentIndex()
+        if index.isValid():
+            model = index.model()
+            if hasattr(model, 'mapToSource'):
+                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+            else:
+                srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        self.newSaveList = NewItemGUI(self)
+        self.newSaveList.buttonBox.accepted.connect(lambda : self.on_newSaveRefListButtonBoxAccepted(item))
+        self.newSaveList.setWindowTitle(self.tr("Add ") + item.field() + self.tr("[] type collection"))
+        self.newSaveList.exec_()
+
+    @log_exception(True)
     def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
         name = self.newSave.lineEdit.text()
         if not name:
@@ -479,6 +534,24 @@ class ItemGUI(QWidget, Ui_Item):
             if reply == QMessageBox.No:
                 return
         DataBase.AllListCollection[item.field()][name] = self.model.to_json(item)
+
+    @log_exception(True)
+    def on_newSaveRefListButtonBoxAccepted(self, item: QJsonTreeItem):
+        name = self.newSaveList.lineEdit.text()
+        if not name:
+            return
+        warpTypeItem = item.brother(item.key() + "WarpType")
+        warpDataItem = item.brother(item.key() + "WarpData")
+        if warpTypeItem is None or warpDataItem is None:
+            return
+
+        if item.field() not in DataBase.AllListCollection:
+            DataBase.AllListCollection[item.field()] = {}
+        if name in DataBase.AllListCollection[item.field()]:
+            reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Cover the collection of the same name?"), QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
+        DataBase.AllListCollection[item.field()][name] = self.model.to_json(warpDataItem)
 
     @log_exception(True)
     def on_copyItem(self, checked: bool=False) -> None:
@@ -531,6 +604,33 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                 return
 
+    def addRefItem(self, data:str, item, index:QModelIndex):
+        if data == "":
+            if item.type() == "list":
+                reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Sure you want to delete the whole list?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+                if reply != QMessageBox.Yes:
+                    return
+            self.model.addRefWarp(index, data)
+        elif item.field() in DataBase.RefGuidList:
+            if item.field() == "CardData":
+                if data in DataBase.AllCardData:
+                    self.model.addRefWarp(index, DataBase.AllCardData[data])
+                    return
+            else:
+                if data in DataBase.AllGuid[item.field()]:
+                    self.model.addRefWarp(index, DataBase.AllGuid[item.field()][data])
+                    return
+        elif item.field() in DataBase.RefNameList:
+            self.model.addRefWarp(index, data)
+        elif item.field() == "ScriptableObject":
+            if data in DataBase.AllScriptableObject:
+                self.model.addRefWarp(index, DataBase.AllScriptableObject[data])
+            else:
+                reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Add an object that does not belong to this Mod (possibly a Tag)?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+                if reply == QMessageBox.Yes:
+                    self.model.addRefWarp(index, data)
+            return
+        
     @log_exception(True)
     def on_addRefItem(self, checked: bool=False) -> None:
         index = self.treeView.currentIndex()
@@ -545,31 +645,7 @@ class ItemGUI(QWidget, Ui_Item):
             select.exec_()
 
             if select.write_flag:
-                if select.lineEdit.text() == "":
-                    if item.type() == "list":
-                        reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Sure you want to delete the whole list?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
-                        if reply != QMessageBox.Yes:
-                            return
-                    self.model.addRefWarp(index, select.lineEdit.text())
-                elif item.field() in DataBase.RefGuidList:
-                    if item.field() == "CardData":
-                        if select.lineEdit.text() in DataBase.AllCardData:
-                            self.model.addRefWarp(index, DataBase.AllCardData[select.lineEdit.text()])
-                            return
-                    else:
-                        if select.lineEdit.text() in DataBase.AllGuid[item.field()]:
-                            self.model.addRefWarp(index, DataBase.AllGuid[item.field()][select.lineEdit.text()])
-                            return
-                elif item.field() in DataBase.RefNameList:
-                    self.model.addRefWarp(index, select.lineEdit.text())
-                elif item.field() == "ScriptableObject":
-                    if select.lineEdit.text() in DataBase.AllScriptableObject:
-                        self.model.addRefWarp(index, DataBase.AllScriptableObject[select.lineEdit.text()])
-                    else:
-                        reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Add an object that does not belong to this Mod (possibly a Tag)?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
-                        if reply == QMessageBox.Yes:
-                            self.model.addRefWarp(index, select.lineEdit.text())
-                    return
+                self.addRefItem(select.lineEdit.text(), item, index)
 
     @log_exception(True)
     def on_addEmptyRefItem(self, checked: bool=False) -> None:

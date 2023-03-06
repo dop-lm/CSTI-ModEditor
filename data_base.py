@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*- 
-import json
+import ujson as json
 import sys
 import os
 import copy
+import time
 from glob import glob
 from myLogger import *
 
@@ -143,22 +144,35 @@ class DataBase(object):
                 if dir in DataBase.RefGuidList:
                     for file in [y for x in os.walk(mod_dir + r"/" + dir) for y in glob(os.path.join(x[0], '*.json'))]:
                         file_name = os.path.basename(file)
-                        with open(file, "r") as f:
-                            data = json.load(f)
+                        guid = None
+                        with open(file, "rb") as f:
+                            data = f.read(-1)
+                            guid_idx = data.find(b'"UniqueID"')
+                            if guid_idx == -1:
+                                continue
+                            start_mark = data.find(b'"', guid_idx + len('"UniqueID"'))
+                            if start_mark == -1:
+                                continue
+                            end_mark = data.find(b'"', start_mark + 1)
+                            if end_mark == -1:
+                                continue
+                            guid = data[start_mark + 1:end_mark]
+                        if guid is None or guid == "":
+                            continue
                         ref = mod_name + "_" + file_name[:-5]
                         if dir == "CardData":
                             DataBase.AllRef[dir]["Mod"].append(ref)
-                            DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
-                            DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
-                            DataBase.AllCardData.update({ref : data["UniqueID"]})
+                            DataBase.AllGuid[dir].update({ref : guid})
+                            DataBase.AllGuidPlain.update({ref : guid})
+                            DataBase.AllCardData.update({ref : guid})
                             DataBase.AllPath[dir].update({ref : file})
-                            DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
+                            DataBase.AllScriptableObject.update({ref : guid})
                         else:
                             DataBase.AllRef[dir].append(ref)
-                            DataBase.AllGuid[dir].update({ref : data["UniqueID"]})
-                            DataBase.AllGuidPlain.update({ref : data["UniqueID"]})
+                            DataBase.AllGuid[dir].update({ref : guid})
+                            DataBase.AllGuidPlain.update({ref : guid})
                             DataBase.AllPath[dir].update({ref : file})
-                            DataBase.AllScriptableObject.update({ref : data["UniqueID"]})
+                            DataBase.AllScriptableObject.update({ref : guid})
                 elif dir == "GameSourceModify":
                     pass
                 elif dir == "ScriptableObject":
@@ -388,8 +402,6 @@ class DataBase(object):
                 DataBase.AllListCollection = json.load(f)
                             
     def saveCollection():
-        temp_dict = copy.deepcopy(DataBase.AllCollection)
-        delete_keys_from_dict(temp_dict, "Empty Default")
         with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllCollection, f)
 
