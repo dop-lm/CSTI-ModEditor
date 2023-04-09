@@ -156,7 +156,7 @@ class DataBase(object):
                             end_mark = data.find(b'"', start_mark + 1)
                             if end_mark == -1:
                                 continue
-                            guid = data[start_mark + 1:end_mark]
+                            guid = data[start_mark + 1:end_mark].decode()
                         if guid is None or guid == "":
                             continue
                         ref = mod_name + "_" + file_name[:-5]

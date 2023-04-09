@@ -24,7 +24,7 @@ import SelectGUI
 import ExportToZip
 from glob import glob
 from pathlib import Path
-from functools import partial
+# from functools import partial
 
 ModEditorVersion = "0.5.3"
 
@@ -72,7 +72,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if self.config.has_option("Config", "AutoReplace_LocalizationKey_ParentObjectID"):
             self.auto_replace_key_guid = self.config.getboolean("Config", "AutoReplace_LocalizationKey_ParentObjectID")
         else:
-            self.auto_replace_key_guid = False
+            self.auto_replace_key_guid = True
             self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
             self.saveConfig()
 
@@ -186,6 +186,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             self.autoresize = True
             self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
+        self.config.set("Config", "AutoResize", str(self.autoresize))
         self.saveConfig()
 
     @log_exception(True)
@@ -196,6 +197,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             self.auto_replace_key_guid = True
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
+        self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
         self.saveConfig()
 
     @log_exception(True)
@@ -394,7 +396,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             top_name = self.file_model.fileName(top_parent)
             if top_name == "ScriptableObject":
                 group_name = file_name
-                select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewData)
+                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewData)
                 select.exec_()
                 template_key = select.lineEdit.text()
                 try:
@@ -463,7 +465,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             top_name = self.file_model.fileName(top_parent)
             if file_name:
                 group_name = top_name
-                select = SelectGUI.SelectGUI(self, field_name = group_name, checked = False, type = SelectGUI.SelectGUI.NewModify)
+                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewModify)
                 select.exec_()
                 if select.write_flag:
                     target_key = select.lineEdit.text()
