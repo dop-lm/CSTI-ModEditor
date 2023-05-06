@@ -15,9 +15,9 @@ from myLogger import *
 
 class ModifyItemGUI(ItemGUI):
     def __init__(self, parent=None, field:str="", key:str="", item_name:str="", guid:str="", \
-        auto_resize:bool=True, auto_replace_key_guid:bool=False, mod_info:dict=None):
+        auto_resize:bool=True, auto_replace_key_guid:bool=False, mod_info:dict=None, mod_path:str=""):
         super(ModifyItemGUI, self).__init__(parent, field, key, item_name, guid, \
-            auto_resize, auto_replace_key_guid, mod_info)
+            auto_resize, auto_replace_key_guid, mod_info, mod_path)
 
     #override
     def addSpecialButton(self):

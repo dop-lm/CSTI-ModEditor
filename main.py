@@ -26,7 +26,7 @@ from glob import glob
 from pathlib import Path
 # from functools import partial
 
-ModEditorVersion = "0.5.3"
+ModEditorVersion = "0.5.4"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -368,7 +368,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     if top_parent is None:
                         return
                     top_name = self.file_model.fileName(top_parent)
-                    if file_name in DataBase.SupportList:
+                    if top_name in DataBase.SupportList:
                         if top_name == "GameSourceModify" or top_name == "ScriptableObject":
                             pass
                         else:
@@ -490,6 +490,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                 if not os.path.exists(card_path):                                    
                                     with open(card_path, "w") as f:
                                         f.write("{\n\n}")
+                                    self.openTreeViewItem(self.file_model.index(card_path))
                                 else:
                                     QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
                     except Exception as ex:
@@ -607,7 +608,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 else:
                     guid = ""
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
-                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info)
+                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
             elif top_name in DataBase.RefGuidList:
                 with open(file_path, 'r') as f:
@@ -617,7 +618,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     else:
                         guid = ""
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
-                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info)
+                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             elif top_name == "ScriptableObject":
                 with open(file_path, 'r') as f:
@@ -629,7 +630,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 top2nd_parent = self.getDepthParent(index, depth=2)
                 top2nd_name = self.file_model.fileName(top2nd_parent)
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
-                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info)
+                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             else:
                 print("openTreeViewItem Unexport Type")

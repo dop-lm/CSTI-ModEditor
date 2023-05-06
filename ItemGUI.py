@@ -14,13 +14,14 @@ from data_base import *
 
 class ItemGUI(QWidget, Ui_Item):
     def __init__(self, parent=None, field:str="", key:str="", item_name:str="", guid:str="", \
-        auto_resize:bool=True, auto_replace_key_guid:bool=False, mod_info:dict=None):
+        auto_resize:bool=True, auto_replace_key_guid:bool=False, mod_info:dict=None, mod_path:str=""):
         super(ItemGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
         self.item_name = item_name
         self.guid = guid
         self.mod_info = mod_info
+        self.mod_path = mod_path
         self.tab_key = key
         self.auto_replace_key_guid = auto_replace_key_guid
         self.treeView.setItemDelegateForColumn(1, ItemDelegate(self.field, self.treeView))
@@ -71,6 +72,12 @@ class ItemGUI(QWidget, Ui_Item):
             tabButton = QPushButton(self.tr("Add blueprint main group"), self)
             tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
             self.horizontalLayout.insertWidget(2, tabButton)
+            # addTagButton = QPushButton(self.tr("Add tag in IncludedCards"), self)
+            # self.horizontalLayout.insertWidget(3, addTagButton)
+            # addTagButton.clicked.connect(self.on_addTagButtonCardTabGroupIncludedCards)
+            # delTagButton = QPushButton(self.tr("Del tag in IncludedCards"), self)
+            # self.horizontalLayout.insertWidget(4, delTagButton)
+            # delTagButton.clicked.connect(self.on_delTagButtonCardTabGroupIncludedCards)
         if self.field == "PlayerCharacter":
             tabButton = QPushButton(self.tr("Add character journal"), self)
             tabButton.clicked.connect(self.on_tabButtonPlayerCharacterJournalName)
@@ -96,6 +103,30 @@ class ItemGUI(QWidget, Ui_Item):
         if select.write_flag and select.lineEdit.text():
             self.model.addItem(QModelIndex(), "BlueprintCardDataCardTabGroup", str, select.lineEdit.text(), "SpecialWarp", True)
             return
+        
+    # @log_exception(True)
+    # def on_addTagButtonCardTabGroupIncludedCards(self, checked: bool=False):
+    #     if self.mod_path:
+    #         pass
+
+    # @log_exception(True)
+    # def on_delTagButtonCardTabGroupIncludedCards(self, checked: bool=False):
+    #     if self.mod_path:
+    #         IncludedCardsItem = self.model.mRootItem.childByKey("IncludedCardsWarpData")
+    #         if IncludedCardsItem is None:
+    #             return
+    #         select = SelectGUI(self.treeView, field_name = "CardTag", type = SelectGUI.Ref)
+    #         select.exec_()
+    #         if select.write_flag and select.lineEdit.text():
+    #             for file in [y for x in os.walk(self.mod_path + r"/CardData") for y in glob(os.path.join(x[0], '*.json'))]:
+    #                 with open(file, "r") as f:
+    #                     data = f.read(-1)
+    #                     for child in IncludedCardsItem.mChilds.values():
+    #                         guid_idx = data.find('"UniqueID": "{0}"'.format(child.mValue))
+    #                         if guid_idx == -1:
+    #                             continue
+    #                         else:
+    #                             print(file)
 
     @log_exception(True)
     def on_tabButtonCardDataSubTabGroup(self, checked: bool=False):
