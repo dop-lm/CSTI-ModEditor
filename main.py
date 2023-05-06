@@ -26,7 +26,7 @@ from glob import glob
 from pathlib import Path
 # from functools import partial
 
-ModEditorVersion = "0.5.4"
+ModEditorVersion = "0.5.5"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -106,7 +106,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def dataInit(self):
-        DataBase.loadDataBase(QDir.currentPath())
+        DataBase.loadDataBase(QDir.currentPath(), self.language)
 
     def ui_Init(self):
         self.treeView.doubleClicked.connect(self.on_treeViewDoubleClicked)
@@ -528,7 +528,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
         with open(item.tab_key, "w") as f:
-            json.dump(save_data, f, sort_keys=True, indent = 4)
+            json.dump(save_data, f, sort_keys=True, indent=4)
         DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
     
     @log_exception(True)

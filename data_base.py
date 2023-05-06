@@ -82,7 +82,7 @@ class DataBase(object):
     def __init__(self):
         pass
 
-    def loadDataBase(data_dir):
+    def loadDataBase(data_dir:str, lan:str):
         DataBase.DataDir = data_dir
 
         if not os.path.exists(DataBase.DataDir + "/Mods"):
@@ -113,7 +113,7 @@ class DataBase(object):
         DataBase.loadCollection()
 
         # Load Note
-        DataBase.loadNote()
+        DataBase.loadNote(lan)
 
         # Load GameSimpCn
         DataBase.loadGameSimpCn()
@@ -537,14 +537,18 @@ class DataBase(object):
                 f.write(DataBase.AllModSimpCn[key]["translate"].replace("\n", "\\n").replace("\t", "\\t"))
                 f.write('\n')
 
-    def loadNote():
-        if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/Notes'):
-            for file in os.listdir(DataBase.DataDir + r'/CSTI-JsonData/Notes'):
+    def loadNote(lan:str="zh_CN"):
+        if lan == "zh_CN":
+            note_name = "Notes"
+        else:
+            note_name = "Notes-En"
+        if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/' + note_name):
+            for file in os.listdir(DataBase.DataDir + r'/CSTI-JsonData/' + note_name):
                 try:
                     if file.endswith(".txt"):
                         if file[:-4] not in DataBase.AllNotes:
                             DataBase.AllNotes[file[:-4]] = {}
-                        with open(DataBase.DataDir + r'/CSTI-JsonData/Notes/' + file, "r", encoding='utf-8') as f:
+                        with open(DataBase.DataDir + r'/CSTI-JsonData/' + note_name + r'/' + file, "r", encoding='utf-8') as f:
                             lines = f.readlines()
                             for line in lines:
                                 line = line.replace("\n", "")
@@ -554,7 +558,7 @@ class DataBase(object):
                     elif file.endswith(".json"):
                         if file[:-5] not in DataBase.AllNotes:
                             DataBase.AllNotes[file[:-5]] = {}
-                        with open(DataBase.DataDir + r'/CSTI-JsonData/Notes/' + file, "r", encoding='utf-8') as f:
+                        with open(DataBase.DataDir + r'/CSTI-JsonData/' + note_name + r'/' + file, "r", encoding='utf-8') as f:
                             data = json.load(f)
                             for key, item in data.items():
                                 if type(item) == str:
