@@ -90,6 +90,7 @@
     <addaction name="action_AutoTranslationDuplicates"/>
     <addaction name="action_DeleteObsoleteTranslation"/>
     <addaction name="action_FormatAllLocalizationKey"/>
+    <addaction name="action_JsonDumpWithoutEnsureAscii"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -152,6 +153,11 @@
   <action name="action_FormatAllLocalizationKey">
    <property name="text">
     <string>Format All LocalizationKey</string>
+   </property>
+  </action>
+  <action name="action_JsonDumpWithoutEnsureAscii">
+   <property name="text">
+    <string>Json Dump without ensure_ascii</string>
    </property>
   </action>
  </widget>

@@ -479,7 +479,7 @@ class DataBase(object):
         ModSimpCnDict = {}
         for file in files:
             try:
-                with open(file, "r") as f:
+                with open(file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     DataBase.loopLoadModSimpCn(data, mod_name, ModSimpCnDict)
             except Exception as ex:
@@ -494,15 +494,26 @@ class DataBase(object):
         files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
         for file in files:
             try:
-                with open(file, "r") as f:
+                with open(file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     DataBase.loopFormatSimpCn(data, mod_name)
-                with open(file, "w") as f:
-                    json.dump(data, f, sort_keys=True, indent=4)
+                with open(file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, sort_keys=True, indent=4, ensure_ascii=False)
             except Exception as ex:
                 QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
         DataBase.saveModSimpCn(mod_dir, False)
         
+    def dumpAllJsonFileWithoutEnsureAscii(mod_dir:str, mod_name:str):
+        files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
+        for file in files:
+            try:
+                with open(file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                with open(file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, sort_keys=True, indent=4, ensure_ascii=False)
+            except Exception as ex:
+                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+
     def loopFormatSimpCn(json, mod_name:str):
         if type(json) is dict:
             for key, item in json.items():
@@ -600,8 +611,8 @@ class DataBase(object):
     #                     if os.path.isdir(base_path + r"/" + dir + r"/" + sub_dir):
     #                         for file in os.listdir(base_path + dir + r"/" + sub_dir):
     #                             if file.endswith(".json"):
-    #                                 json.load(open(base_path + dir + r"/" + sub_dir + r"/" + file, "r"))
+    #                                 json.load(open(base_path + dir + r"/" + sub_dir + r"/" + file, "r", encoding='utf-8'))
     #             else:
     #                 for file in os.listdir(base_path + dir):
     #                     if file.endswith(".json"):
-    #                         json.load(open(base_path + dir + r"/" + file, "r"))
+    #                         json.load(open(base_path + dir + r"/" + file, "r", encoding='utf-8'))

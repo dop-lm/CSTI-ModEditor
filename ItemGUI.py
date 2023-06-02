@@ -119,7 +119,7 @@ class ItemGUI(QWidget, Ui_Item):
     #         select.exec_()
     #         if select.write_flag and select.lineEdit.text():
     #             for file in [y for x in os.walk(self.mod_path + r"/CardData") for y in glob(os.path.join(x[0], '*.json'))]:
-    #                 with open(file, "r") as f:
+    #                 with open(file, "r", encoding='utf-8') as f:
     #                     data = f.read(-1)
     #                     for child in IncludedCardsItem.mChilds.values():
     #                         guid_idx = data.find('"UniqueID": "{0}"'.format(child.mValue))
@@ -377,7 +377,7 @@ class ItemGUI(QWidget, Ui_Item):
                 if self.field in DataBase.AllPath:
                     template_key = select.lineEdit.text().split("(")[0]
                     if template_key in DataBase.AllPath[self.field]:
-                        with open(DataBase.AllPath[self.field][template_key], 'r') as f:
+                        with open(DataBase.AllPath[self.field][template_key], 'r', encoding='utf-8') as f:
                             data = json.load(f)[item.key()]
                         if type(data) is list:
                             for sub_data in data:
@@ -601,7 +601,7 @@ class ItemGUI(QWidget, Ui_Item):
                 if self.field in DataBase.AllPath:
                     template_key = select.lineEdit.text().split("(")[0]
                     if template_key in DataBase.AllPath[self.field]:
-                        with open(DataBase.AllPath[self.field][template_key], 'r') as f:
+                        with open(DataBase.AllPath[self.field][template_key], 'r', encoding='utf-8') as f:
                             data = json.load(f)[item.key()]
                         if self.auto_replace_key_guid:
                             loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid)

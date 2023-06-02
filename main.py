@@ -26,7 +26,7 @@ from glob import glob
 from pathlib import Path
 # from functools import partial
 
-ModEditorVersion = "0.5.5"
+ModEditorVersion = "0.5.6"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -48,7 +48,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def saveConfig(self):
-        with open(os.path.join(QDir.currentPath(), "config.ini"), "w") as f:
+        with open(os.path.join(QDir.currentPath(), "config.ini"), "w", encoding='utf-8') as f:
             self.config.write(f)
 
     @log_exception(True)
@@ -138,6 +138,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_AutoTranslationDuplicates.triggered.connect(self.on_actionAutoTranslationDuplicates)
         self.action_DeleteObsoleteTranslation.triggered.connect(self.on_actionDeleteObsoleteTranslation)
         self.action_FormatAllLocalizationKey.triggered.connect(self.on_actionFormatAllLocalizationKey)
+        self.action_JsonDumpWithoutEnsureAscii.triggered.connect(self.on_actionJsonDumpWithoutEnsureAscii)
 
         self.actionChinese.triggered.connect(self.on_select_Chinese)
         self.actionEnglish.triggered.connect(self.on_select_English)
@@ -218,6 +219,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             reply = QMessageBox.question(self, self.tr('Add Prefixes'), self.tr('Sure you want to add Mod prefixes to all LocalizationKeys?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
             if reply == QMessageBox.Yes:
                 DataBase.formatAllLocalizationKey(self.mod_path, self.mod_info["Name"])
+
+    @log_exception(True)
+    def on_actionJsonDumpWithoutEnsureAscii(self, checked: bool=False):
+        if self.mod_info:
+            reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Sure you want to do it?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                DataBase.dumpAllJsonFileWithoutEnsureAscii(self.mod_path, self.mod_info["Name"])
 
     @log_exception(True)
     def treeItemRenamed(self, path: str, old_file: str, new_file: str):
@@ -404,9 +412,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     if card_name and template_key:
                         card_path = file_path + "/" + card_name + ".json"
                         if not os.path.exists(card_path):
-                            with open(DataBase.AllPath[group_name][template_key], "r") as f:
+                            with open(DataBase.AllPath[group_name][template_key], "r", encoding='utf-8') as f:
                                 temp_data = f.read(-1)
-                            with open(card_path, "w") as f:
+                            with open(card_path, "w", encoding='utf-8') as f:
                                 f.write(temp_data)
                         else:
                             QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
@@ -437,7 +445,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         if card_name and template_key:
                             card_path = file_path + "/" + card_name + ".json"
                             if not os.path.exists(card_path):
-                                with open(DataBase.AllPath[group_name][template_key], "r") as f:
+                                with open(DataBase.AllPath[group_name][template_key], "r", encoding="utf-8") as f:
                                     temp_data = f.read(-1)
                                 temp_json = json.loads(temp_data)
                                 guid = temp_json["UniqueID"]
@@ -445,7 +453,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                     loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Name"], card_name)
                                 temp_data = json.dumps(temp_json, sort_keys=True)
                                 temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-",""))
-                                with open(card_path, "w") as f:
+                                with open(card_path, "w", encoding='utf-8') as f:
                                     f.write(temp_data)
                             else:
                                 QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
@@ -488,7 +496,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                 if not os.path.exists(card_dir):
                                     os.mkdir(card_dir)
                                 if not os.path.exists(card_path):                                    
-                                    with open(card_path, "w") as f:
+                                    with open(card_path, "w", encoding="utf-8") as f:
                                         f.write("{\n\n}")
                                     self.openTreeViewItem(self.file_model.index(card_path))
                                 else:
@@ -527,8 +535,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.delGameSourceModifyTemplate(save_data)
         else:
             save_data = self.tabWidget.widget(index).treeView.model().sourceModel().to_json()
-        with open(item.tab_key, "w") as f:
-            json.dump(save_data, f, sort_keys=True, indent=4)
+        with open(item.tab_key, "w", encoding="utf-8") as f:
+            json.dump(save_data, f, sort_keys=True, indent=4, ensure_ascii=False)
         DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
     
     @log_exception(True)
@@ -597,9 +605,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 if template_reftrans.rfind("(") >= 0:
                     template_ref = template_reftrans[0:template_reftrans.rfind("(")]
                 template_path = DataBase.AllPathPlain[template_ref]
-                with open(file_path, 'rb') as f:
+                with open(file_path, 'r', encoding="utf-8") as f:
                     src_json = json.load(f)
-                with open(template_path, 'rb') as f:
+                with open(template_path, 'r', encoding="utf-8") as f:
                     template_json = json.load(f)
                     self.loopDelGameSourceModifyTemplateWarpper(template_json)
                 src_json.update(template_json)
@@ -611,7 +619,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
             elif top_name in DataBase.RefGuidList:
-                with open(file_path, 'r') as f:
+                with open(file_path, 'r', encoding="utf-8") as f:
                     data = json.load(f)
                     if "UniqueID" in data:
                         guid = data["UniqueID"]
@@ -621,7 +629,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             elif top_name == "ScriptableObject":
-                with open(file_path, 'r') as f:
+                with open(file_path, 'r', encoding="utf-8") as f:
                     data = json.load(f)
                     if "UniqueID" in data:
                         guid = data["UniqueID"]
@@ -683,8 +691,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if self.mod_info:
             for i in range(self.tabWidget.count()):
                 self.saveTabJsonItem(i)
-            with open(self.mod_path + "/ModInfo.json", "w") as f:
-                json.dump(self.mod_info, f, sort_keys=True, indent=4)
+            with open(self.mod_path + "/ModInfo.json", "w", encoding="utf-8") as f:
+                json.dump(self.mod_info, f, sort_keys=True, indent=4, ensure_ascii=False)
             DataBase.saveCollection()
             DataBase.saveModSimpCn(self.mod_path)
             DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
@@ -718,7 +726,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.reset()
         self.mod_path = mod_path
 
-        with open(self.mod_path + "/ModInfo.json", "r") as f:
+        with open(self.mod_path + "/ModInfo.json", "r", encoding='utf-8') as f:
             self.mod_info = json.load(f)
         if not "Name" in self.mod_info or not self.mod_info["Name"]:
             self.mod_info["Name"] = os.path.basename(self.mod_path)

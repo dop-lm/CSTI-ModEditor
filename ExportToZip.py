@@ -24,11 +24,11 @@ def exportToZip(dir: str, mod_info: dict):
                 if file.endswith("ModInfo.json"):
                     continue
                 else:
-                    with open(file, "r") as f:
+                    with open(file, "r", encoding='utf-8') as f:
                         json_data = json.load(f)
                         toJsonMinimalism(json_data)
-                    with open(file, "w") as f:
-                        json.dump(json_data, f)
+                    with open(file, "w", encoding="utf-8") as f:
+                        json.dump(json_data, f, ensure_ascii=False)
             zipname = os.path.split(temp_dir)[0] + "/%s-%s-ModLoader%s" % (mod_info["Name"], mod_info["Version"], mod_info["ModLoaderVerison"])
             shutil.make_archive(zipname, 'zip', temp_dir)
             shutil.rmtree(temp_dir)
