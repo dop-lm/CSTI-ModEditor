@@ -43,7 +43,7 @@ class DataBase(object):
     DataDir = None
     RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
     # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
-    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter", "PerkGroup", "EndgameLogCategory", "PerkTabGroup"]
+    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter", "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
     SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter", "PerkGroup", "EndgameLogCategory", "PerkTabGroup", \
         "GameSourceModify", "ScriptableObject"]
 
@@ -62,6 +62,7 @@ class DataBase(object):
     AllEnum = {}
     AllEnumRev = {}
     AllTypeField = {}
+    AllTypeFieldCutMark = {}
 
     AllRef = {}             # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[RefTrans]
     AllGuid = {}            # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][RefTrans] -> Guid
@@ -74,7 +75,7 @@ class DataBase(object):
     AllCollection = {}      # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
     AllListCollection = {}      # DataBase.AllListCollection["CardsDropCollection"][CustomName] -> List json data
     AllNotes = {}           # DataBase.AllNotes["CardData"]["CardName"] -> Note
-    AllBaseJsonData = {}    # DataBase.AllBaseJsonData["CardData"]["CardOnCardAction"] -> base json data
+    AllBaseJsonData = {}    # DataBase.AllBaseJsonData["CardData"] -> base json data
 
     AllSimpCn = {}  # DataBase.AllSimpCn[key] -> {origin, trans}
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
@@ -100,8 +101,8 @@ class DataBase(object):
         # Load Base Json
         DataBase.loadBaseJson()
 
-        # Load UniqueIDScriptable FieldName FieldType
-        DataBase.loadUniqueIDScriptableField()
+        # Load ScriptableObject FieldName FieldType
+        DataBase.loadScriptableObjectField()
 
         # Load Template
         # DataBase.loadTemplate()
@@ -225,6 +226,12 @@ class DataBase(object):
         DataBase.AllRefBase = {}
         DataBase.AllScriptableObjectBase = {}
 
+        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
+            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
+                if dir not in DataBase.RefGuidList:
+                    DataBase.RefGuidList.append(dir)
+                    DataBase.SupportList.append(dir)
+
         for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/"):
             if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/" + dir):
                 DataBase.RefNameList.append(dir)
@@ -232,6 +239,7 @@ class DataBase(object):
         for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/"):
             if not file.endswith(".txt"):
                 continue
+            DataBase.RefGuidList.append(file[:-4])
             with open(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/" + file, encoding='utf-8') as f:
                 temp = f.readlines()
                 temp = list(map(lambda x: x.replace("\n",""), temp))
@@ -347,18 +355,14 @@ class DataBase(object):
                     DataBase.AllPathBase[dir][os.path.basename(file)[:-5]] = file
 
     def loadBaseJson():
-        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
-            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
-                DataBase.AllBaseJsonData[dir] = {}
-                for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
-                    if file.endswith(".json"):
-                        with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir + r"/" + file, "r", encoding='utf-8') as f:
-                            try:
-                                DataBase.AllBaseJsonData[dir][file[:-5]] = json.load(f)
-                            except Exception as ex:
-                                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+        for file in [y for x in os.walk(DataBase.DataDir + r'/CSTI-JsonData/UniqueIDScriptableBaseJsonData/') for y in glob(os.path.join(x[0], '*.json'))]:
+            with open(file, encoding='utf-8') as f:
+                try:
+                    DataBase.AllBaseJsonData[os.path.basename(file)[:-5]] = json.load(f)
+                except Exception as ex:
+                    print(ex)
 
-    def loadUniqueIDScriptableField():
+    def loadScriptableObjectField():
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData")
         for file in files:
             if file.endswith(".json"):
@@ -368,6 +372,10 @@ class DataBase(object):
                     except Exception as ex:
                         QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
+        for key in list(DataBase.AllTypeField.keys()):
+            if key in DataBase.AllBaseJsonData:
+                DataBase.AllTypeField[key] = {k : DataBase.AllTypeField[key][k] for k in DataBase.AllBaseJsonData[key].keys() if k in DataBase.AllTypeField[key]}
+        
         files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData/EnumType")
         for file in files:
             if file.endswith(".json"):
@@ -392,10 +400,9 @@ class DataBase(object):
                 DataBase.AllCollection = json.load(f)
 
         for key in DataBase.AllBaseJsonData.keys():
-            for sub_key in DataBase.AllBaseJsonData[key].keys():
-                if  sub_key not in DataBase.AllCollection:
-                    DataBase.AllCollection[sub_key] = {}
-                DataBase.AllCollection[sub_key]["Empty Default"] = DataBase.AllBaseJsonData[key][sub_key]
+            if key not in DataBase.AllCollection:
+                DataBase.AllCollection[key] = {}
+            DataBase.AllCollection[key]["Empty Default"] = DataBase.AllBaseJsonData[key]
 
         if os.path.exists(DataBase.DataDir + r"/Mods/" + r"ListCollection.json"):
             with open(DataBase.DataDir + r"/Mods/" + r"ListCollection.json", "r", encoding='utf-8') as f:
@@ -599,7 +606,7 @@ class DataBase(object):
                         else:
                             print("Wrong Format Key: " + line)
         except Exception as ex:
-                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     # def loadTemplate():
     #     DataBase.AllTemplateBase = {}

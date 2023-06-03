@@ -246,35 +246,43 @@ class QJsonTreeItem(object):
                     child.setType(v.__class__)
                 rootItem.appendChild(key, child)
 
-            # if itemField in DataBase.AllTypeField:
-            #     missing_list = [a for a in DataBase.AllTypeField[itemField].keys() if a not in value.keys()]
-            #     for key in missing_list:
-            #         if itemField in DataBase.AllBaseJsonData and key in DataBase.AllBaseJsonData[itemField]:
-            #             child = QJsonTreeItem.load(DataBase.AllBaseJsonData[itemField][key], DataBase.AllTypeField[itemField][key], rootItem, key)           
-            #             child.setStatus("Missing") 
-            #             rootItem.appendChild(key, child)
-            #         elif DataBase.AllTypeField[itemField][key] == "Boolean":
-            #             child = QJsonTreeItem.load(False, DataBase.AllTypeField[itemField][key], rootItem, key)           
-            #             child.setStatus("Missing") 
-            #             rootItem.appendChild(key, child)
-            #         elif DataBase.AllTypeField[itemField][key] == "Int32":
-            #             child = QJsonTreeItem.load(0, DataBase.AllTypeField[itemField][key], rootItem, key)           
-            #             child.setStatus("Missing") 
-            #             rootItem.appendChild(key, child)
-            #         elif DataBase.AllTypeField[itemField][key] == "Single":
-            #             child = QJsonTreeItem.load(0.0, DataBase.AllTypeField[itemField][key], rootItem, key)           
-            #             child.setStatus("Missing") 
-            #             rootItem.appendChild(key, child)
-            #         elif DataBase.AllTypeField[itemField][key] == "String":
-            #             child = QJsonTreeItem.load("", DataBase.AllTypeField[itemField][key], rootItem, key)           
-            #             child.setStatus("Missing") 
-            #             rootItem.appendChild(key, child)
-            #         else:
-            #             child = QJsonTreeItem.load("", "None", rootItem, key)           
-            #             child.setStatus("Missing") 
-            #             rootItem.appendChild(key, child)
-                        
-
+            if (itemField in DataBase.AllTypeField and itemField not in DataBase.RefGuidList) or (itemField in DataBase.AllTypeField and parent is None):
+                missing_list = [k for k in DataBase.AllTypeField[itemField].keys() if k not in value.keys()]
+                for key in missing_list:
+                    keyField = DataBase.AllTypeField[itemField][key]
+                    print(itemField, key, keyField, parent is None)
+                    if keyField in DataBase.RefGuidList:
+                        pass
+                    if keyField == "SpecialWarp":
+                        pass
+                    elif keyField in DataBase.AllBaseJsonData:
+                        child = QJsonTreeItem.load(DataBase.AllBaseJsonData[keyField], keyField, rootItem, key)           
+                        child.setStatus("Missing") 
+                        rootItem.appendChild(key, child)
+                    elif keyField == "Boolean":
+                        child = QJsonTreeItem.load(False, keyField, rootItem, key)           
+                        child.setStatus("Missing") 
+                        child.setField(keyField) 
+                        rootItem.appendChild(key, child)
+                    elif keyField == "Int32":
+                        child = QJsonTreeItem.load(0, keyField, rootItem, key)           
+                        child.setStatus("Missing") 
+                        child.setField(keyField) 
+                        rootItem.appendChild(key, child)
+                    elif keyField == "Single":
+                        child = QJsonTreeItem.load(0.0, keyField, rootItem, key)           
+                        child.setStatus("Missing")
+                        child.setField(keyField)  
+                        rootItem.appendChild(key, child)
+                    elif keyField == "String":
+                        child = QJsonTreeItem.load("", keyField, rootItem, key)           
+                        child.setStatus("Missing") 
+                        child.setField(keyField) 
+                        rootItem.appendChild(key, child)
+                    else:
+                        child = QJsonTreeItem.load("", "None", rootItem, key)           
+                        child.setStatus("Missing") 
+                        rootItem.appendChild(key, child)
         elif isinstance(value, list):
             rootItem.setType(list)
             if len(value) > 0:

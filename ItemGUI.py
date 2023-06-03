@@ -399,8 +399,8 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        if self.field in DataBase.AllBaseJsonData and item.field() in DataBase.AllBaseJsonData[self.field]:
-            data = DataBase.AllBaseJsonData[self.field][item.field()]         
+        if item.field() in DataBase.AllBaseJsonData:
+            data = DataBase.AllBaseJsonData[item.field()]         
             if item.field() in DataBase.AllEnum:
                 data = 0   
             child_key = 0

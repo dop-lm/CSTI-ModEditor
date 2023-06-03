@@ -394,8 +394,8 @@ class ModifyItemGUI(ItemGUI):
                             warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
                             if warpDataItem.type() == "list":
                                 if mode == "Empty":
-                                    if self.field in DataBase.AllBaseJsonData and childItem.field() in DataBase.AllBaseJsonData[self.field]:
-                                        data = DataBase.AllBaseJsonData[self.field][childItem.field()]
+                                    if childItem.field() in DataBase.AllBaseJsonData:
+                                        data = DataBase.AllBaseJsonData[childItem.field()]
                                     child_key = 0
                                     while str(child_key) in warpDataItem.mChilds:
                                         child_key += 1
@@ -426,8 +426,8 @@ class ModifyItemGUI(ItemGUI):
                             warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
                             if warpDataItem.type() == "list":
                                 if mode == "Empty":
-                                    if self.field in DataBase.AllBaseJsonData and childItem.field() in DataBase.AllBaseJsonData[self.field]:
-                                        data = DataBase.AllBaseJsonData[self.field][childItem.field()]
+                                    if childItem.field() in DataBase.AllBaseJsonData:
+                                        data = DataBase.AllBaseJsonData[childItem.field()]
                                     child_key = 0
                                     while str(child_key) in warpDataItem.mChilds:
                                         child_key += 1

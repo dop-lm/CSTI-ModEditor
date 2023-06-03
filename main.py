@@ -26,7 +26,7 @@ from glob import glob
 from pathlib import Path
 # from functools import partial
 
-ModEditorVersion = "0.5.6"
+ModEditorVersion = "0.6.1"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
