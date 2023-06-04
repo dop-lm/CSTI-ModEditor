@@ -4,7 +4,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from data_base import *
+from DataBase import *
 from SelectGUI import *
 
 class ItemDelegate(QItemDelegate):

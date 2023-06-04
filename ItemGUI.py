@@ -10,7 +10,7 @@ from SelectGUI import *
 from NewItemGUI import *
 from ItemDelegate import *
 from CollectionGUI import *
-from data_base import *
+from DataBase import *
 
 class ItemGUI(QWidget, Ui_Item):
     def __init__(self, parent=None, field:str="", key:str="", item_name:str="", guid:str="", \

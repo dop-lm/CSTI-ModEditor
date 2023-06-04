@@ -81,6 +81,7 @@
     </widget>
     <addaction name="action_ResizeMode"/>
     <addaction name="action_AutoReplace"/>
+    <addaction name="action_AutoCompleteUpdates"/>
     <addaction name="menuLanguage"/>
    </widget>
    <widget class="QMenu" name="menuFunction">
@@ -158,6 +159,11 @@
   <action name="action_JsonDumpWithoutEnsureAscii">
    <property name="text">
     <string>Json Dump without ensure_ascii</string>
+   </property>
+  </action>
+  <action name="action_AutoCompleteUpdates">
+   <property name="text">
+    <string>Turn off auto completion updates</string>
    </property>
   </action>
  </widget>

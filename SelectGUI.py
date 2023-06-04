@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 
 from Ui_Select import *
 from Ui_Collection import *
-from data_base import *
+from DataBase import *
 
 class SelectGUI(QDialog, Ui_Select):
     Ref = 0

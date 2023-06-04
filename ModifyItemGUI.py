@@ -10,8 +10,8 @@ from SelectGUI import *
 from NewItemGUI import *
 from ItemDelegate import *
 from ItemGUI import *
-from data_base import *
-from myLogger import *
+from DataBase import *
+from MyLogger import *
 
 class ModifyItemGUI(ItemGUI):
     def __init__(self, parent=None, field:str="", key:str="", item_name:str="", guid:str="", \

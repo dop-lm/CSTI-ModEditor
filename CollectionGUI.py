@@ -5,7 +5,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from Ui_Collection import *
-from data_base import *
+from DataBase import *
 
 class CollectionGUI(QDialog, Ui_Collection):
     def __init__(self, field, database, parent = None):

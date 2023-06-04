@@ -15,8 +15,8 @@ import uuid
 import time
 import configparser
 # import anytree
-from myLogger import *
-from data_base import *
+from MyLogger import *
+from DataBase import *
 import ItemGUI
 import NewItemGUI
 import ModifyItemGUI
@@ -26,7 +26,7 @@ from glob import glob
 from pathlib import Path
 # from functools import partial
 
-ModEditorVersion = "0.6.1"
+ModEditorVersion = "0.6.2"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -83,6 +83,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "AutoResize", str(self.autoresize))
             self.saveConfig()
 
+        if self.config.has_option("Config", "AutoCompleteUpdate"):
+            DataBase.AutoCompleteUpdate = self.config.getboolean("Config", "AutoCompleteUpdate")
+        else:
+            DataBase.AutoCompleteUpdate = False
+            self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
+            self.saveConfig()
+
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
@@ -123,6 +130,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
         else:
             self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
+
+        if DataBase.AutoCompleteUpdate:
+            self.action_AutoCompleteUpdates.setText(self.tr("Turn off auto completion updates"))
+        else:
+            self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
         
         width = QtWidgets.qApp.desktop().availableGeometry(self).width()
         self.splitter.setSizes([int(width * 1/8), int(width * 7/8)])
@@ -135,6 +147,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_ExportZip.triggered.connect(self.on_exportZip)
         self.action_ResizeMode.triggered.connect(self.on_actionResizeMode)
         self.action_AutoReplace.triggered.connect(self.on_actionAutoReplace)
+        self.action_AutoCompleteUpdates.triggered.connect(self.on_actionCompleteUpdate)
         self.action_AutoTranslationDuplicates.triggered.connect(self.on_actionAutoTranslationDuplicates)
         self.action_DeleteObsoleteTranslation.triggered.connect(self.on_actionDeleteObsoleteTranslation)
         self.action_FormatAllLocalizationKey.triggered.connect(self.on_actionFormatAllLocalizationKey)
@@ -199,6 +212,17 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.auto_replace_key_guid = True
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
         self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
+        self.saveConfig()
+
+    @log_exception(True)
+    def on_actionCompleteUpdate(self, checked: bool=False):
+        if DataBase.AutoCompleteUpdate:
+            DataBase.AutoCompleteUpdate = False
+            self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
+        else:
+            DataBase.AutoCompleteUpdate = True
+            self.action_AutoCompleteUpdates.setText(self.tr("Turn off auto completion updates"))
+        self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
         self.saveConfig()
 
     @log_exception(True)
