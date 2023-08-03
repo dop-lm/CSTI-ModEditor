@@ -538,6 +538,7 @@ class DataBase(object):
                 #将图片转换为dds格式
                 with Image(filename=TexturePath + r"/" + file) as img:
                     img.compression = ImgComp[filetype]
+                    img.flip()
                     img.save(filename=DxtPath + r"/" + filename + ".dds")
 
     def dumpAllJsonFileWithoutEnsureAscii(mod_dir:str, mod_name:str):
