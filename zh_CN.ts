@@ -316,6 +316,11 @@
         <translation>不使用ensure_ascii进行Json导出</translation>
     </message>
     <message>
+        <location filename="Ui_Main.py" line="134"/>
+        <source>Textures To DXT</source>
+        <translation>压缩图片为dds文件</translation>
+    </message>
+    <message>
         <location filename="Ui_Main.py" line="130"/>
         <source>Turn off auto completion updates</source>
         <translation type="unfinished"></translation>

@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+import shutil
+
 import ujson as json
 import sys
 import os
@@ -6,6 +8,7 @@ import copy
 import time
 from glob import glob
 from MyLogger import *
+from wand.image import Image
 
 def loopReplaceLocalizationKeyAndReplaceGuid(jsondata:dict, mod_name:str, card_name:str, guid:str="", entry_key:str="", index:int=-1):
     if isinstance(jsondata, list):
@@ -516,7 +519,27 @@ class DataBase(object):
             except Exception as ex:
                 QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
         DataBase.saveModSimpCn(mod_dir, False)
-        
+
+    def texturesToDXT(mod_dir:str):
+        '''
+        1-4字节是宽，5-8字节是高，第9字节是dxt1=1或dxt5=5,之后全是纹理数据
+        '''
+        TexturePath = mod_dir + r"/Resource/Picture"
+        DxtPath = mod_dir + r"/Resource/Dxt"
+        ImgComp = {".jpg": 'dxt1', ".jpeg": 'dxt1', ".png": 'dxt5'}
+        if os.path.exists(TexturePath):
+            if os.path.exists(DxtPath):
+                shutil.rmtree(DxtPath)
+            os.mkdir(DxtPath)
+            for file in os.listdir(TexturePath):
+                filename, filetype = os.path.splitext(file)
+                if filetype not in ImgComp:
+                    continue
+                #将图片转换为dds格式
+                with Image(filename=TexturePath + r"/" + file) as img:
+                    img.compression = ImgComp[filetype]
+                    img.save(filename=DxtPath + r"/" + filename + ".dds")
+
     def dumpAllJsonFileWithoutEnsureAscii(mod_dir:str, mod_name:str):
         files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
         for file in files:

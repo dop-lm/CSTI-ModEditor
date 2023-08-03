@@ -56,7 +56,7 @@
      <x>0</x>
      <y>0</y>
      <width>884</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -92,6 +92,7 @@
     <addaction name="action_DeleteObsoleteTranslation"/>
     <addaction name="action_FormatAllLocalizationKey"/>
     <addaction name="action_JsonDumpWithoutEnsureAscii"/>
+    <addaction name="action_TexturesToDXT"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -164,6 +165,14 @@
   <action name="action_AutoCompleteUpdates">
    <property name="text">
     <string>Turn off auto completion updates</string>
+   </property>
+  </action>
+  <action name="action_TexturesToDXT">
+   <property name="text">
+    <string>Textures To DXT</string>
+   </property>
+   <property name="toolTip">
+    <string>Textures To DXT</string>
    </property>
   </action>
  </widget>
