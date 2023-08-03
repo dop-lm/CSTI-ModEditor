@@ -8,7 +8,6 @@ import copy
 import time
 from glob import glob
 from MyLogger import *
-from wand.image import Image
 
 def loopReplaceLocalizationKeyAndReplaceGuid(jsondata:dict, mod_name:str, card_name:str, guid:str="", entry_key:str="", index:int=-1):
     if isinstance(jsondata, list):
@@ -521,9 +520,10 @@ class DataBase(object):
         DataBase.saveModSimpCn(mod_dir, False)
 
     def texturesToDXT(mod_dir:str):
-        '''
-        1-4字节是宽，5-8字节是高，第9字节是dxt1=1或dxt5=5,之后全是纹理数据
-        '''
+        try:
+            from wand.image import Image
+        except:
+            return
         TexturePath = mod_dir + r"/Resource/Picture"
         DxtPath = mod_dir + r"/Resource/Dxt"
         ImgComp = {".jpg": 'dxt1', ".jpeg": 'dxt1', ".png": 'dxt5'}
