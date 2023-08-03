@@ -26,7 +26,7 @@ from glob import glob
 from pathlib import Path
 # from functools import partial
 
-ModEditorVersion = "0.6.2"
+ModEditorVersion = "0.6.3"
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent = None):
@@ -151,6 +151,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.action_AutoTranslationDuplicates.triggered.connect(self.on_actionAutoTranslationDuplicates)
         self.action_DeleteObsoleteTranslation.triggered.connect(self.on_actionDeleteObsoleteTranslation)
         self.action_FormatAllLocalizationKey.triggered.connect(self.on_actionFormatAllLocalizationKey)
+        self.action_TexturesToDXT.triggered.connect(self.on_actionTexturesToDXT)
         self.action_JsonDumpWithoutEnsureAscii.triggered.connect(self.on_actionJsonDumpWithoutEnsureAscii)
 
         self.actionChinese.triggered.connect(self.on_select_Chinese)
@@ -243,6 +244,14 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             reply = QMessageBox.question(self, self.tr('Add Prefixes'), self.tr('Sure you want to add Mod prefixes to all LocalizationKeys?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
             if reply == QMessageBox.Yes:
                 DataBase.formatAllLocalizationKey(self.mod_path, self.mod_info["Name"])
+
+    @log_exception(True)
+    def on_actionTexturesToDXT(self, checked: bool = False):
+        if self.mod_info:
+            reply = QMessageBox.question(self, self.tr('Textures To DXT'), self.tr('Sure you want to convert all textures to DXT?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                DataBase.texturesToDXT(self.mod_path)
+
 
     @log_exception(True)
     def on_actionJsonDumpWithoutEnsureAscii(self, checked: bool=False):
